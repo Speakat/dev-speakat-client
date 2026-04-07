@@ -1,7 +1,7 @@
 ---
 name: "\U0001F4CB Task"
 about: 리팩토링, 문서, 인프라, 테스트 등
-title: "[예시]"
+title: "[Task]"
 labels: ''
 assignees: ''
 type: Task
