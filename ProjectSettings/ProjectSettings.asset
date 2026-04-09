@@ -4,7 +4,7 @@
 PlayerSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 28
-  productGUID: ca0679dee2383a14a9f493653f8a2bbf
+  productGUID: f1798fdaea844aa4eb0d5a8c4026f458
   AndroidProfiler: 0
   AndroidFilterTouchesWhenObscured: 0
   AndroidEnableSustainedPerformanceMode: 0
@@ -925,10 +925,10 @@ PlayerSettings:
   captureStartupLogs: {}
   activeInputHandler: 1
   windowsGamepadBackendHint: 0
-  cloudProjectId: b804e92f-36e1-4cd8-99ae-6a6fe999d243
+  cloudProjectId: 01eda54d-b50a-4666-89c4-23b84c44f3ae
   framebufferDepthMemorylessMode: 0
   qualitySettingsNames: []
-  projectName: Speakat
+  projectName: Speakat 2026-04-08_22-53-08
   organizationId: h5916847
   cloudEnabled: 0
   legacyClampBlendShapeWeights: 0
