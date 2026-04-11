@@ -111,6 +111,20 @@ public class AuthManager : MonoBehaviour
         ));
     }
 
+    public void OnReceiveCodeFromJS(string codeData)
+    {
+        string[] parts = codeData.Split(':');
+        if (parts.Length == 2)
+        {
+            string provider = parts[0];
+            string code = parts[1];
+
+            Debug.Log($"[AuthManager] WebGL Code Received: {provider}");
+
+            HandleAuthorizationCode(provider, code);
+        }
+    }
+
     private void OnLoginSuccess(OAuthLoginResponse response)
     {
         if (response == null || response.data == null)

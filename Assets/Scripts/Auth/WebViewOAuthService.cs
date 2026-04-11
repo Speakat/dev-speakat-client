@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using System.Runtime.InteropServices;
 
 public class WebViewOAuthService : MonoBehaviour
 {
@@ -13,20 +14,33 @@ public class WebViewOAuthService : MonoBehaviour
     [SerializeField] private string kakaoRestApiKey;
     [SerializeField] private string kakaoRedirectUri;
 
+    #if UNITY_WEBGL && !UNITY_EDITOR
+        [DllImport("__Internal")]
+        private static extern void OpenOAuthPopup(string url);
+    #endif
+
     public void StartLogin(string provider)
     {
         string authUrl = BuildAuthorizationUrl(provider);
 
-        if (string.IsNullOrEmpty(authUrl))
-        {
-            Debug.LogError($"[WebViewOAuthService] Unsupported provider: {provider}");
-            return;
-        }
+        //if (string.IsNullOrEmpty(authUrl))
+        //{
+        //    Debug.LogError($"[WebViewOAuthService] Unsupported provider: {provider}");
+        //    return;
+        //}
 
-        Debug.Log($"[WebViewOAuthService] Open auth url: {authUrl}");
+        #if UNITY_WEBGL && !UNITY_EDITOR
+            Debug.Log("[WebViewOAuthService] WEBGL 환경 감지: JS 팝업을 시도");
+            OpenOAuthPopup(authUrl);
+        #else
+            Debug.Log("[WebViewOAuthService] 모바일 환경 감지: 시스템 브라우저 시도");
+            Application.OpenURL(authUrl);
+#endif
+
+        //Debug.Log($"[WebViewOAuthService] Open auth url: {authUrl}");
 
         //OpenWebView(authUrl);
-        Application.OpenURL(authUrl);
+        //Application.OpenURL(authUrl);
     }
 
     private string BuildAuthorizationUrl(string provider)
