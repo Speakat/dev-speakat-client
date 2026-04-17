@@ -110,11 +110,11 @@ public class StageSwipeUIController : MonoBehaviour
 
 			if ( touch.phase == TouchPhase.Began )
 			{
-				startTouchX = touch.position.x;
+				startTouchPositionX = touch.position.x;
 			}
 			else if ( touch.phase == TouchPhase.Ended )
 			{
-				endTouchX = touch.position.x;
+				endTouchPositionX = touch.position.x;
 
 				UpdateSwipe();
 			}
