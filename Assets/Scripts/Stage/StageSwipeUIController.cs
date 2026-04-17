@@ -40,15 +40,27 @@ public class StageSwipeUIController : MonoBehaviour
 
     private void Start()
     {
-        scrollPageValues = new float[transform.childCount];
+        int pageCount = transform.childCount;
+        scrollPageValues = new float[pageCount];
 
-        // 페이지 사이의 거리(ScrollView: 0~1 사이 값)
-        valueDistance = 1f / (scrollPageValues.Length - 1f);
-
-        // 페이지의 각 value 위치 설정 (0 <= value <= 1)
-        for (int i = 0; i < scrollPageValues.Length; ++i)
+        if (pageCount == 0) // 페이지가 없는 경우
         {
-            scrollPageValues[i] = valueDistance * i;
+            Debug.LogError("페이지가 존재하지 않습니다.");
+        }
+        else if (pageCount == 1) // 페이지 1개인 경우
+        {
+            scrollPageValues[0] = 0;
+        }
+        else // 페이지 2개 이상의 경우
+        {
+            // 페이지 사이의 거리(ScrollView: 0~1 사이 값)
+            valueDistance = 1f / (pageCount - 1f);
+
+            // 페이지의 각 value 위치 설정 (0 <= value <= 1)
+            for (int i = 0; i < pageCount; ++i)
+            {
+                scrollPageValues[i] = valueDistance * i;
+            }
         }
 
         // 인디케이터 설정
