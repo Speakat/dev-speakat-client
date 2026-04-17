@@ -7,6 +7,6 @@ public class QuestButtonPanel : MonoBehaviour
 
     public void SetButtonPosition(float dx)
     {
-        questButton.transform.position += new Vector3(dx, 0, 0);
+        questButton.GetComponent<RectTransform>().anchoredPosition += new Vector2(dx, 0);
     }
 }
