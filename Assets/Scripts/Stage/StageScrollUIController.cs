@@ -1,26 +1,26 @@
 using UnityEngine;
 
-public class QuestScrollUIController : MonoBehaviour
+public class StageScrollUIController : MonoBehaviour
 {
     [SerializeField]
-    private GameObject questButtonPrefab;
+    private GameObject stageButtonPrefab;
 
-    private int questCount = 0; // 퀘스트 총 개수
+    private int stageCount = 0; // 스테이지 총 개수
 
     private void Awake()
     {
-        // TODO: 퀘스트 api 호출
-        questCount = 10; // 예시로 퀘스트 10개 설정
+        // TODO: 스테이지 api 호출
+        stageCount = 10; // 예시로 스테이지 10개 설정
 
         SetPrefabs();
     }
 
     private void SetPrefabs()
     {
-        for (int i = 0; i < questCount; i++)
+        for (int i = 0; i < stageCount; i++)
         {
-            GameObject questButton = Instantiate(questButtonPrefab, transform);
-            QuestButtonPanel buttonPanel = questButton.GetComponent<QuestButtonPanel>();
+            GameObject stageButton = Instantiate(stageButtonPrefab, transform);
+            StageButtonPanel buttonPanel = stageButton.GetComponent<StageButtonPanel>();
 
             // 배치 예시(3가지 위치 반복)
             float dValue = 100f; // 위치 간격
@@ -35,15 +35,5 @@ public class QuestScrollUIController : MonoBehaviour
             }
             // d == 1인 경우 중앙에 배치(위치 이동 x)
         }
-    }
-
-    void Start()
-    {
-        
-    }
-
-    void Update()
-    {
-        
     }
 }

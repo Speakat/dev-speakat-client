@@ -1,7 +1,7 @@
 using TMPro;
 using UnityEngine;
 
-public class StagePanelUIController : MonoBehaviour
+public class QuestPanelUIController : MonoBehaviour
 {
     [SerializeField]
     private TextMeshProUGUI stageNameText; // 스테이지 이름 텍스트

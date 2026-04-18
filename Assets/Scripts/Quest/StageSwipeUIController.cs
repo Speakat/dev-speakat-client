@@ -81,7 +81,7 @@ public class StageSwipeUIController : MonoBehaviour
             GameObject page = Instantiate(pagePrefab, transform);
             GameObject indicator = Instantiate(indicatorPrefab, indicatorParent);
 
-            page.GetComponent<StagePanelUIController>().SetStageName($"Stage {i + 1}");
+            page.GetComponent<QuestPanelUIController>().SetStageName($"Stage {i + 1}");
         }
     }
 
