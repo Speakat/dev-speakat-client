@@ -186,7 +186,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Quest
+  m_text: Stage
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -270,7 +270,7 @@ GameObject:
   - component: {fileID: 5093782917392164449}
   - component: {fileID: 3256836749582977673}
   m_Layer: 5
-  m_Name: QuestButtonPanel
+  m_Name: StageButtonPanel
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -316,4 +316,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 16b18d524a8cbce4ba0bc11a35e67523, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::QuestButtonPanel
-  questButton: {fileID: 4569345902736376763}
+  stageButton: {fileID: 4569345902736376763}
