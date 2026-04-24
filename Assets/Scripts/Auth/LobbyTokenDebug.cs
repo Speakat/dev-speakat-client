@@ -10,11 +10,15 @@ public class LobbyTokenDebug : MonoBehaviour
             return;
         }
 
-        //Debug.Log($"[Lobby] TokenStore object: {TokenStore.Instance.gameObject.name}");
-        //Debug.Log($"[Lobby] accessToken: {TokenStore.Instance.GetAccessToken()}");
-        //Debug.Log($"[Lobby] refreshToken: {TokenStore.Instance.GetRefreshToken()}");
+        Debug.Log($"[Lobby] TokenStore object: {TokenStore.Instance.gameObject.name}");
+        Debug.Log($"[Lobby] accessToken: {TokenStore.Instance.AccessToken}");
+        Debug.Log($"[Lobby] refreshToken: {TokenStore.Instance.RefreshToken}");
 
-        if (TokenStore.Instance.HasAccessToken()) Debug.Log("[Lobby] Login session exists");
-        else Debug.LogError("[Lobby] No access token,,");
+        Debug.Log($"[Lobby] User: {TokenStore.Instance.Nickname} ({TokenStore.Instance.Email})");
+
+        if (TokenStore.Instance.HasAccessToken())
+            Debug.Log("[Lobby] Login session exists");
+        else
+            Debug.LogError("[Lobby] No access token,,");
     }
 }

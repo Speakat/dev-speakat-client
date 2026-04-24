@@ -113,16 +113,29 @@ public class AuthManager : MonoBehaviour
 
     public void OnReceiveCodeFromJS(string codeData)
     {
-        string[] parts = codeData.Split(':');
-        if (parts.Length == 2)
+        //string[] parts = codeData.Split(':');
+        //if (parts.Length == 2)
+        //{
+        //    string provider = parts[0];
+        //    string code = parts[1];
+
+        //    Debug.Log($"[AuthManager] WebGL Code Received: {provider}");
+
+        //    HandleAuthorizationCode(provider, code);
+        //}
+
+        int idx = codeData.IndexOf(':');
+        if (idx <= 0 || idx >= codeData.Length - 1)
         {
-            string provider = parts[0];
-            string code = parts[1];
-
-            Debug.Log($"[AuthManager] WebGL Code Received: {provider}");
-
-            HandleAuthorizationCode(provider, code);
+            Debug.LogError("[AuthManager] Invalid code from JS");
+            return;
         }
+
+        string provider = codeData.Substring(0, idx);
+        string code = codeData.Substring(idx + 1);
+
+        Debug.Log($"[AuthManager] WebGL Code Received: {provider}");
+        HandleAuthorizationCode(provider, code);
     }
 
     private void OnLoginSuccess(OAuthLoginResponse response)
@@ -142,7 +155,7 @@ public class AuthManager : MonoBehaviour
         //Debug.Log($"[AuthManager] tokenStore.HasAccessToken() = {TokenStore.Instance.HasAccessToken()}");
         //Debug.Log($"[AuthManager] Login success: {response.data.nickname}, provider={response.data.provider}, isNewUser={response.data.isNewUser}");
 
-        if (response.data.isNewUser) SceneManager.LoadScene("Lobby");
+        if (response.data.isNewUser) SceneManager.LoadScene("Lobby"); //OnBoarding 없어서 임시로 Lobby로 보냄
         else SceneManager.LoadScene("Lobby");
     }
 

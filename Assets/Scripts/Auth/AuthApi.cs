@@ -6,7 +6,7 @@ using UnityEngine.Networking;
 
 public class AuthApi : MonoBehaviour
 {
-    [SerializeField] private string baseUrl = "https://api-domain.com"; //수정할예정
+    [SerializeField] private string baseUrl = "http://127.0.0.1:8080/"; //수정할예정
 
     public IEnumerator LoginWithOAuth(
         string provider,

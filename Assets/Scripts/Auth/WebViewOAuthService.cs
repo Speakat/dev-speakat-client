@@ -22,6 +22,7 @@ public class WebViewOAuthService : MonoBehaviour
     public void StartLogin(string provider)
     {
         string authUrl = BuildAuthorizationUrl(provider);
+        Debug.Log($"[WebViewOAuthService] authUrl = {authUrl}");
 
         //if (string.IsNullOrEmpty(authUrl))
         //{
@@ -33,9 +34,9 @@ public class WebViewOAuthService : MonoBehaviour
             Debug.Log("[WebViewOAuthService] WEBGL 환경 감지: JS 팝업을 시도");
             OpenOAuthPopup(authUrl);
         #else
-            Debug.Log("[WebViewOAuthService] 모바일 환경 감지: 시스템 브라우저 시도");
+        Debug.Log("[WebViewOAuthService] 모바일 환경 감지: 시스템 브라우저 시도");
             Application.OpenURL(authUrl);
-#endif
+        #endif
 
         //Debug.Log($"[WebViewOAuthService] Open auth url: {authUrl}");
 
@@ -47,11 +48,19 @@ public class WebViewOAuthService : MonoBehaviour
     {
         provider = provider.ToLower();
 
+        string currentGoogleRedirectUri = googleRedirectUri;
+        string currentKakaoRedirectUri = kakaoRedirectUri;
+
+        #if UNITY_WEBGL && !UNITY_EDITOR
+            currentGoogleRedirectUri = "http://127.0.0.1:5500/callback.html";
+            currentKakaoRedirectUri = "http://127.0.0.1:5500/callback.html";
+        #endif
+
         if (provider == "google")
         {
             return "https://accounts.google.com/o/oauth2/v2/auth"
                 + "?client_id=" + Uri.EscapeDataString(googleClientId)
-                + "&redirect_uri=" + Uri.EscapeDataString(googleRedirectUri)
+                + "&redirect_uri=" + Uri.EscapeDataString(currentGoogleRedirectUri)
                 + "&response_type=code"
                 + "&scope=" + Uri.EscapeDataString("openid email profile");
         }
@@ -60,7 +69,7 @@ public class WebViewOAuthService : MonoBehaviour
         {
             return "https://kauth.kakao.com/oauth/authorize"
                 + "?client_id=" + Uri.EscapeDataString(kakaoRestApiKey)
-                + "&redirect_uri=" + Uri.EscapeDataString(kakaoRedirectUri)
+                + "&redirect_uri=" + Uri.EscapeDataString(currentKakaoRedirectUri)
                 + "&response_type=code";
         }
 
