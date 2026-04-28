@@ -5,19 +5,9 @@ public class StageScrollUIController : MonoBehaviour
     [SerializeField]
     private GameObject stageButtonPrefab;
 
-    private int stageCount = 0; // 스테이지 총 개수
-
-    private void Awake()
+    public void SetStageScrollUI(StageList stageList)
     {
-        // TODO: 스테이지 api 호출
-        stageCount = 10; // 예시로 스테이지 10개 설정
-
-        SetPrefabs();
-    }
-
-    private void SetPrefabs()
-    {
-        for (int i = 0; i < stageCount; i++)
+        for (int i = 0; i < stageList.items.Count; i++)
         {
             GameObject stageButton = Instantiate(stageButtonPrefab, transform);
             StageButtonPanel buttonPanel = stageButton.GetComponent<StageButtonPanel>();
