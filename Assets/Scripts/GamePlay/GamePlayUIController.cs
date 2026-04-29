@@ -9,6 +9,8 @@ public class GamePlayUIController : MonoBehaviour
     private LogPanelUIController logPanel;
     [SerializeField]
     private Button logButton;
+    [SerializeField]
+    private FeedbackPopupUIController feedbackPopup;
 
     private void Awake()
     {
