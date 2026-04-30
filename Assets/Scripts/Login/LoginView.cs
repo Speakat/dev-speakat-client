@@ -18,7 +18,7 @@ public class LoginView : MonoBehaviour
         //Debug.Log("Google mock Login");
         //SceneManager.LoadScene(LOBBY_SCENE);
 
-        //authManager.StartGoogleLogin();
+        //authManager.StartMockGoogleLogin();
         authManager.StartGoogleLogin();
     }
 }
