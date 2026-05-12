@@ -28,18 +28,61 @@ public class StageSwipeUIController : MonoBehaviour
     private float startTouchPositionX; // 터치 시작 위치
     private float endTouchPositionX; // 터치 종료 위치
     private bool isSwiping = false; // 현재 스와이프 중인지
-    private float circleContentScale = 0.5f;	// 현재 페이지의 원 크기(배율)
+    private float circleContentScale = 0.5f;    // 현재 페이지의 원 크기(배율)
 
-    private void Awake()
+    // 더미데이터
+    private string stageDetailDummyData = @"
     {
-        // TODO : api 호출해서 페이지 수 세팅
-        maxPage = 5; // 임시로 5로 세팅
+      ""isSuccess"": true,
+      ""data"": {
+        ""stageId"": 1,
+        ""title"": ""카페에서 주문하기"",
+        ""description"": ""카페에서 음료를 주문하는 상황을 연습합니다."",
+        ""status"": ""UNLOCKED"",
+        ""quests"": [
+          {
+            ""questId"": 1,
+            ""title"": ""인사하고 메뉴판 받기"",
+            ""description"": ""점원에게 인사하고 메뉴판을 요청하세요."",
+            ""sortOrder"": 1,
+            ""isCompleted"": true,
+            ""attemptCount"": 2
+          },
+          {
+            ""questId"": 2,
+            ""title"": ""음료 주문하기"",
+            ""description"": ""원하는 음료와 수량을 말하세요."",
+            ""sortOrder"": 2,
+            ""isCompleted"": false,
+            ""attemptCount"": 1
+          },
+          {
+            ""questId"": 3,
+            ""title"": ""결제 및 인사"",
+            ""description"": ""결제 수단을 선택하고 작별 인사를 하세요."",
+            ""sortOrder"": 3,
+            ""isCompleted"": false,
+            ""attemptCount"": 0
+          }
+        ]
+      },
+      ""code"": null,
+      ""message"": null
+    }";
 
-        SetPrefabs(maxPage);
+    public void Start()
+    {
+        Init(5, 2); // 테스트용 코드
     }
 
-    private void Start()
+    public void Init(int stageCount, int selectedStageId)
     {
+        StageDetailResponse stageDetailResponse = JsonUtility.FromJson<StageDetailResponse>(stageDetailDummyData);
+        // TODO : api 호출해서 페이지 수 세팅
+        maxPage = stageCount;
+
+        SetPrefabs(maxPage);
+
         int pageCount = transform.childCount;
         scrollPageValues = new float[pageCount];
 
@@ -70,8 +113,13 @@ public class StageSwipeUIController : MonoBehaviour
             indicatorContents[i] = indicatorParent.GetChild(i);
         }
 
-        // 최초 시작할 때 0번 설정
-        SetScrollBarValue(0);
+        // 선택된 스테이지 설정
+        int targetIndex = selectedStageId - 1;
+        if (targetIndex < 0 || targetIndex >= maxPage)
+        {
+            targetIndex = 0;
+        }
+        SetScrollBarValue(targetIndex);
     }
 
     private void SetPrefabs(int count)

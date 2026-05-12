@@ -24,3 +24,33 @@ public class StageItem
     public int questCount;
     public int completedQuestCount;
 }
+
+[System.Serializable]
+public class StageDetailResponse
+{
+    public bool isSuccess;
+    public StageDetailData data;
+    public string code;
+    public string message;
+}
+
+[System.Serializable]
+public class StageDetailData
+{
+    public int stageId;
+    public string title;
+    public string description;
+    public string status;
+    public List<QuestItem> quests;
+}
+
+[System.Serializable]
+public class QuestItem
+{
+    public int questId;
+    public string title;
+    public string description;
+    public int sortOrder;
+    public bool isCompleted;
+    public int attemptCount;
+}
