@@ -2,34 +2,38 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using System.Collections.Generic;
+using System.Collections;
+using UnityEngine.Networking;
 
 [System.Serializable]
 public class CalendarDayData
 {
-    public int day;        // ³¯Â¥
-    public bool isAttended; // Ãâ¼® ¿©ºÎ
+    public int day;
+    public bool isAttended;
 }
 
-// API¿¡¼­ ¹Ş¾Æ¿Ã µ¥ÀÌÅÍ¿ë (ÀÏ´ÜÀº ´õ¹Ì)
+// APIì—ì„œ ë°›ì•„ì˜¬ ë°ì´í„°ìš©
 public class MyPageData
 {
+    public string profileImageUrl;
     public string nickname;
     //public int level;
     public string currentCourse;
-    //public float expProgress; // Progress bar, °æÇèÄ¡ ¹Ù / 0.0f~1.0f
+    //public float expProgress; // Progress bar, ê²½í—˜ì¹˜ ë°” / 0.0f~1.0f
     public int currentStreak;
     public int scoreMeaning;
     public int scoreGrammar;
     public int scoreNaturalness;
 
     public int currentMonth;
-    public int startDayOffset; // 1ÀÏ ¾Õ ºóÄ­ °³¼ö (¼ö¿ç ½ÃÀÛÀÌ¸é ¾Õ¿¡ 2Ä­)
-    public List<CalendarDayData> calendarDays; // ÀÌ¹ø ´Ş ÀüÃ¼ ³¯Â¥ µ¥ÀÌÅÍ
+    public int startDayOffset; // 1ì¼ ì• ë¹ˆì¹¸ ê°œìˆ˜ (ìˆ˜ìšœ ì‹œì‘ì¸ ê²½ìš° ì•ì— ë‘ ì¹¸)
+    public List<CalendarDayData> calendarDays; // ì´ë²ˆ ë‹¬ ì „ì²´ ë‚ ì§œ ë°ì´í„°
 }
 
 public class MyPageView : MonoBehaviour
 {
     [Header("Profile Area")]
+    [SerializeField] private Image profilePic;
     [SerializeField] private TMP_Text nicknameText;
     //[SerializeField] private TMP_Text levelText;
     [SerializeField] private TMP_Text courseText;
@@ -77,10 +81,10 @@ public class MyPageView : MonoBehaviour
 
         MyPageData dummyData = new MyPageData
         {
-            nickname = "½ºÇÇÄ¹",
+            nickname = "ìŠ¤í”¼ìº£",
             //level = 7,
-            currentCourse = "A2 ¡¤ ÃÊ±Ş ¿µ¾î",
-            //expProgress = 0.7f, // 70% Á¤µµ
+            currentCourse = "A2 Â· ì´ˆê¸‰ ì˜ì–´",
+            //expProgress = 0.7f, // 70%
             currentStreak = 14,
             scoreMeaning = 87,
             scoreGrammar = 87,
@@ -95,12 +99,32 @@ public class MyPageView : MonoBehaviour
 
     public void UpdateUI(MyPageData data)
     {
-        nicknameText.text = $"{data.nickname} ´Ô";
+        if (!string.IsNullOrEmpty(data.profileImageUrl)) StartCoroutine(LoadProfileImage(data.profileImageUrl));
+
+        IEnumerator LoadProfileImage(string url)
+        {
+            using (UnityWebRequest uwr = UnityWebRequestTexture.GetTexture(url))
+            {
+                yield return uwr.SendWebRequest();
+                   
+                if (uwr.result != UnityWebRequest.Result.Success)
+                {
+                    Debug.LogWarning("í”„ë¡œí•„ ì´ë¯¸ì§€ ë¡œë“œ ì‹¤íŒ¨: " + uwr.error);
+                }
+                else
+                {
+                    Texture2D texture = DownloadHandlerTexture.GetContent(uwr);
+                    profilePic.sprite = Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), new Vector2(0.5f, 0.5f));
+                }
+            }
+        }
+
+            nicknameText.text = $"{data.nickname} ë‹˜";
         //levelText.text = $"Lv.{data.level}";
         courseText.text = data.currentCourse;
         //expProgressBar.value = data.expProgress;
 
-        streakDaysText.text = $"{data.currentStreak}ÀÏÂ° ¿¬¼Ó ÇĞ½À!";
+        streakDaysText.text = $"{data.currentStreak}ì¼ì§¸ ì—°ì† í•™ìŠµ!";
 
         meaningText.text = $"{data.scoreMeaning}%";
         grammarText.text = $"{data.scoreGrammar}%";
@@ -120,25 +144,25 @@ public class MyPageView : MonoBehaviour
         paddingTop = grid.padding.top;
         paddingLeft = grid.padding.left;
 
-        // ±âÁ¸¿¡ »ı¼ºµÈ Ä­ÀÌ ÀÖ´Ù¸é ¸ğµÎ ÃÊ±âÈ­
+        // ê¸°ì¡´ì— ìƒì„±ëœ ì¹¸ì´ ìˆë‹¤ë©´ ëª¨ë‘ ì´ˆê¸°í™”
         foreach (Transform child in dateGrid) Destroy(child.gameObject);
         foreach (Transform child in streakContainer) Destroy(child.gameObject);
 
-        // ´ŞÀÌ ½ÃÀÛÇÏ±â Àü ºóÄ­(Offset) ¸¸Å­ Åõ¸íÇÑ Ä­ »ı¼ºÇØ¼­ µÚ·Î ¹Ğ¾îÁÖ±â
+        // ë‹¬ì´ ì‹œì‘í•˜ê¸° ì „ ë¹ˆì¹¸(Offset) ë§Œí¼ íˆ¬ëª…í•œ ì¹¸ ìƒì„±í•´ì„œ ë’¤ë¡œ ë°€ì–´ì£¼ê¸°
         for (int i = 0; i < offset; i++)
         {
             GameObject emptyCell = Instantiate(dateCellPrefab, dateGrid);
-            emptyCell.GetComponentInChildren<TMP_Text>().gameObject.SetActive(false); // ±ÛÀÚ Áö¿ì±â
+            emptyCell.GetComponentInChildren<TMP_Text>().gameObject.SetActive(false); // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½
         }
 
-        // ½ÇÁ¦ ³¯Â¥µé »ı¼º
+        // ì‹¤ì œ ë‚ ì§œë“¤ ìƒì„±
         for (int i = 0; i < dayDataList.Count; i++)
         {
             GameObject cell = Instantiate(dateCellPrefab, dateGrid);
             TMP_Text cellText = cell.GetComponentInChildren<TMP_Text>();
             cellText.text = dayDataList[i].day.ToString();
 
-            // Ãâ¼®ÇÏÁö ¾ÊÀº ³¯Àº ±ÛÀÚ»öÀ» È¸»öÀ¸·Î º¯°æ
+            // ì¶œì„í•˜ì§€ ì•Šì€ ë‚ ì€ ê¸€ììƒ‰ì„ íšŒìƒ‰ìœ¼ë¡œ ë³€ê²½
             if (!dayDataList[i].isAttended) cellText.color = new Color32(153, 153, 153, 255);
             else cellText.color = new Color32(255, 138, 61, 255);
         }
@@ -152,23 +176,23 @@ public class MyPageView : MonoBehaviour
 
         for (int i = 0; i < days.Count; i++)
         {
-            int gridIndex = i + offset; // ¹ÙµÏÆÇ ÀüÃ¼¿¡¼­ÀÇ ½ÇÁ¦ À§Ä¡
+            int gridIndex = i + offset; // ê·¸ë¦¬ë“œ ì „ì²´ì—ì„œì˜ ì‹¤ì œ ìœ„ì¹˜
 
             if (days[i].isAttended)
             {
-                // ¿¬¼Ó ÇĞ½À ½ÃÀÛÁ¡ ±â·Ï
+                // ì—°ì† í•™ìŠµ ì‹œì‘ì  ê¸°ë¡
                 if (startDayIndex == -1)
                     startDayIndex = i;
 
                 if (gridIndex % 7 == 6)
                 {
                     CreateBar(startDayIndex, i, offset);
-                    startDayIndex = -1; // ÃÊ±âÈ­
+                    startDayIndex = -1; // ì´ˆê¸°í™”
                 }
             }
             else
             {
-                // Ãâ¼®À» ¾È Çß´Âµ¥, Áö±İ±îÁö ÀÌ¾îÁö´ø ¿¬¼Ó ÇĞ½ÀÀÌ ÀÖ¾ú´Ù¸é ¸·´ë »ı¼º ÈÄ Á¾·á
+                // ì¶œì„ì„ ì•ˆ í–ˆëŠ”ë° ì§€ê¸ˆê¹Œì§€ ì´ì–´ì§€ë˜ ì—°ì† í•™ìŠµì´ ìˆì—ˆë‹¤ë©´ ë§‰ëŒ€ ìƒì„± í›„ ì¢…ë£Œ
                 if (startDayIndex != -1)
                 {
                     CreateBar(startDayIndex, i - 1, offset);
@@ -177,7 +201,7 @@ public class MyPageView : MonoBehaviour
             }
         }
 
-        // ¿ù¸»±îÁö ²Ë Ã¤¿ö¼­ ¿¬¼Ó ÇĞ½À ÁßÀÎ °æ¿ì ¸¶Áö¸· ¸·´ë »ı¼º
+        // ì›”ë§ê¹Œì§€ ê½‰ ì±„ì›Œì„œ ì—°ì† í•™ìŠµ ì¤‘ì¸ ê²½ìš° ë§ˆì§€ë§‰ ë§‰ëŒ€ ìƒì„±
         if (startDayIndex != -1) CreateBar(startDayIndex, days.Count - 1, offset);
     }
 
@@ -194,14 +218,14 @@ public class MyPageView : MonoBehaviour
         {
             GameObject circle = Instantiate(singleCirclePrefab, streakContainer);
             RectTransform rt = circle.GetComponent<RectTransform>();
-            rt.anchoredPosition = new Vector2(startX + singleCircleOffsetX, startY - singleCircleOffsetY);
+            rt.anchoredPosition = new Vector2(startX + singleCircleOffsetX, startY - 25f);
             rt.sizeDelta = new Vector2((endX - startX) + cellSize, rt.sizeDelta.y);
         }
         else
         {
             GameObject bar = Instantiate(streakBarPrefab, streakContainer);
             RectTransform rt = bar.GetComponent<RectTransform>();
-            rt.anchoredPosition = new Vector2(startX + streakBarOffsetX, startY - streakBarOffsetY);
+            rt.anchoredPosition = new Vector2(startX + streakBarOffsetX, startY - 25f);
             rt.sizeDelta = new Vector2((endX - startX) + cellSize, rt.sizeDelta.y);
         }
     }
