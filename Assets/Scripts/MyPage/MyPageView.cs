@@ -56,9 +56,9 @@ public class MyPageView : MonoBehaviour
     [SerializeField] private GameObject singleCirclePrefab;
 
     [SerializeField] private float streakBarOffsetX = 20f;
-    [SerializeField] private float streakBarOffsetY = 10f;
+    [SerializeField] private float streakBarOffsetY = 25f;
     [SerializeField] private float singleCircleOffsetX = 20f;
-    [SerializeField] private float singleCircleOffsetY = 10f;
+    [SerializeField] private float singleCircleOffsetY = 25f;
 
     //[SerializeField] private float cellSize = 100f;
     //[SerializeField] private float spacing = 20f;
@@ -69,6 +69,10 @@ public class MyPageView : MonoBehaviour
     private float spacingY;
     private float paddingTop;
     private float paddingLeft;
+
+    [SerializeField] private Image myTabIcon;
+    [SerializeField] private Color activeColor = new Color32(255, 138, 61, 255);
+    [SerializeField] private Color inactiveColor = new Color32(170, 170, 170, 255);
 
     void Start()
     {
@@ -95,6 +99,7 @@ public class MyPageView : MonoBehaviour
         };
 
         UpdateUI(dummyData);
+        SetMyTabActive(true);
     }
 
     public void UpdateUI(MyPageData data)
@@ -227,6 +232,17 @@ public class MyPageView : MonoBehaviour
             RectTransform rt = bar.GetComponent<RectTransform>();
             rt.anchoredPosition = new Vector2(startX + streakBarOffsetX, startY - 25f);
             rt.sizeDelta = new Vector2((endX - startX) + cellSize, rt.sizeDelta.y);
+        }
+    }
+
+    public void SetMyTabActive(bool isActive)
+    {
+        if (myTabIcon != null)
+        {
+            myTabIcon.color = isActive ? activeColor : inactiveColor;
+
+            var btn = myTabIcon.GetComponentInParent<Button>();
+            if (btn != null) btn.interactable = !isActive;
         }
     }
 }

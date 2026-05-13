@@ -15,4 +15,9 @@ public class SceneNavigator : MonoBehaviour
     {
         SceneManager.LoadScene("Lobby");
     }
+
+    public void LoadMyPage()
+    {
+        SceneManager.LoadScene("MyPage");
+    }
 }
