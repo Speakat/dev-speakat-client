@@ -44,32 +44,57 @@ public class MyPageView : MonoBehaviour
     [SerializeField] private Color activeColor = new Color32(255, 138, 61, 255);
     [SerializeField] private Color inactiveColor = new Color32(170, 170, 170, 255);
 
+    private int currentDisplayMonth = 10;
+
     void Start()
     {
-        List<CalendarDayData> dummyDays = new List<CalendarDayData>();
+        RefreshData();
+        SetMyTabActive(true);
+    }
+
+    public void OnClickPrevMonth()
+    {
+        currentDisplayMonth--;
+        if (currentDisplayMonth < 1) currentDisplayMonth = 12;
+
+        RefreshData();
+    }
+
+    public void OnClickNextMonth()
+    {
+        currentDisplayMonth++;
+        if (currentDisplayMonth > 12) currentDisplayMonth = 1;
+
+        RefreshData();
+    }
+
+    private void RefreshData()
+    {
+        List<CalendarDayData> newDays = new List<CalendarDayData>();
         for (int i = 1; i <= 31; i++)
         {
-            bool attended = (i >= 5 && i <= 10) || (i >= 18 && i <= 25);
-            dummyDays.Add(new CalendarDayData { day = i, isAttended = attended });
+            int rangeStart1 = 1 + (currentDisplayMonth % 3); // 1, 2, 3일 중 시작
+            int rangeEnd1 = rangeStart1 + (currentDisplayMonth % 4 + 6); // 6~9일 길이
+            int rangeStart2 = 18 + (currentDisplayMonth % 2); // 18, 19일 중 시작
+            int rangeEnd2 = rangeStart2 + (currentDisplayMonth % 3 + 4); // 4~6일 길이
+
+            bool attended = (i >= rangeStart1 && i <= rangeEnd1) || (i >= rangeStart2 && i <= rangeEnd2);
+            newDays.Add(new CalendarDayData { day = i, isAttended = attended });
         }
 
-        MyPageData dummyData = new MyPageData
+        MyPageData newData = new MyPageData
         {
             nickname = "스피캣",
-            //level = 7,
             currentCourse = "A2 · 초급 영어",
-            //expProgress = 0.7f, // 70%
             currentStreak = 14,
             scoreMeaning = 87,
             scoreGrammar = 87,
             scoreNaturalness = 87,
-            currentMonth = 10,
-            startDayOffset = 3,
-            calendarDays = dummyDays
+            currentMonth = currentDisplayMonth,
+            startDayOffset = (currentDisplayMonth % 7), // 시작 요일도 월마다 다르게
+            calendarDays = newDays
         };
-
-        UpdateUI(dummyData);
-        SetMyTabActive(true);
+        UpdateUI(newData);
     }
 
     public void UpdateUI(MyPageData data)
