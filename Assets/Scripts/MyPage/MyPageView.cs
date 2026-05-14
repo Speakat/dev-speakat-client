@@ -21,6 +21,7 @@ public class MyPageData
     public string currentCourse;
     //public float expProgress; // Progress bar, 경험치 바 / 0.0f~1.0f
     public int currentStreak;
+
     public int scoreMeaning;
     public int scoreGrammar;
     public int scoreNaturalness;
@@ -32,44 +33,13 @@ public class MyPageData
 
 public class MyPageView : MonoBehaviour
 {
-    [Header("Profile Area")]
-    [SerializeField] private Image profilePic;
-    [SerializeField] private TMP_Text nicknameText;
-    //[SerializeField] private TMP_Text levelText;
-    [SerializeField] private TMP_Text courseText;
-    //[SerializeField] private Slider expProgressBar;
+    [Header("Child Views")]
+    [SerializeField] private ProfileView profileView;
+    [SerializeField] private StatsView statsView;
+    [SerializeField] private CalendarView calendarView;
 
-    [Header("Streak Area")]
+    [Header("Own UI ")]
     [SerializeField] private TMP_Text streakDaysText;
-
-    [Header("Stats Area")]
-    [SerializeField] private TMP_Text meaningText;
-    [SerializeField] private TMP_Text grammarText;
-    [SerializeField] private TMP_Text naturalnessText;
-
-    [Header("Calendar Area")]
-    [SerializeField] private TMP_Text monthText;
-    [SerializeField] private Transform dateGrid;
-    [SerializeField] private Transform streakContainer;
-    [SerializeField] private GameObject dateCellPrefab;
-    [SerializeField] private GameObject streakBarPrefab;
-    [SerializeField] private GameObject singleCirclePrefab;
-
-    [SerializeField] private float streakBarOffsetX = 20f;
-    [SerializeField] private float streakBarOffsetY = 25f;
-    [SerializeField] private float singleCircleOffsetX = 20f;
-    [SerializeField] private float singleCircleOffsetY = 25f;
-
-    //[SerializeField] private float cellSize = 100f;
-    //[SerializeField] private float spacing = 20f;
-    //[SerializeField] private float paddingTop = 0f;
-    //[SerializeField] private float paddingLeft = 0f;
-    private float cellSize;
-    private float spacingX;
-    private float spacingY;
-    private float paddingTop;
-    private float paddingLeft;
-
     [SerializeField] private Image myTabIcon;
     [SerializeField] private Color activeColor = new Color32(255, 138, 61, 255);
     [SerializeField] private Color inactiveColor = new Color32(170, 170, 170, 255);
@@ -104,135 +74,11 @@ public class MyPageView : MonoBehaviour
 
     public void UpdateUI(MyPageData data)
     {
-        if (!string.IsNullOrEmpty(data.profileImageUrl)) StartCoroutine(LoadProfileImage(data.profileImageUrl));
+        if (profileView != null) profileView.Setup(data.nickname, data.currentCourse, data.profileImageUrl);
+        if (statsView != null) statsView.Setup(data.scoreMeaning, data.scoreGrammar, data.scoreNaturalness);
+        if (calendarView != null) calendarView.Setup(data.currentMonth, data.calendarDays, data.startDayOffset);
 
-        IEnumerator LoadProfileImage(string url)
-        {
-            using (UnityWebRequest uwr = UnityWebRequestTexture.GetTexture(url))
-            {
-                yield return uwr.SendWebRequest();
-                   
-                if (uwr.result != UnityWebRequest.Result.Success)
-                {
-                    Debug.LogWarning("프로필 이미지 로드 실패: " + uwr.error);
-                }
-                else
-                {
-                    Texture2D texture = DownloadHandlerTexture.GetContent(uwr);
-                    profilePic.sprite = Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), new Vector2(0.5f, 0.5f));
-                }
-            }
-        }
-
-            nicknameText.text = $"{data.nickname} 님";
-        //levelText.text = $"Lv.{data.level}";
-        courseText.text = data.currentCourse;
-        //expProgressBar.value = data.expProgress;
-
-        streakDaysText.text = $"{data.currentStreak}일째 연속 학습!";
-
-        meaningText.text = $"{data.scoreMeaning}%";
-        grammarText.text = $"{data.scoreGrammar}%";
-        naturalnessText.text = $"{data.scoreNaturalness}%";
-
-        if (monthText != null) monthText.text = data.currentMonth.ToString();
-
-        InitCalendar(data.calendarDays, data.startDayOffset);
-    }
-
-    private void InitCalendar(List<CalendarDayData> dayDataList, int offset)
-    {
-        var grid = dateGrid.GetComponent<GridLayoutGroup>();
-        cellSize = grid.cellSize.x;
-        spacingX = grid.spacing.x;
-        spacingY = grid.spacing.y;
-        paddingTop = grid.padding.top;
-        paddingLeft = grid.padding.left;
-
-        // 기존에 생성된 칸이 있다면 모두 초기화
-        foreach (Transform child in dateGrid) Destroy(child.gameObject);
-        foreach (Transform child in streakContainer) Destroy(child.gameObject);
-
-        // 달이 시작하기 전 빈칸(Offset) 만큼 투명한 칸 생성해서 뒤로 밀어주기
-        for (int i = 0; i < offset; i++)
-        {
-            GameObject emptyCell = Instantiate(dateCellPrefab, dateGrid);
-            emptyCell.GetComponentInChildren<TMP_Text>().gameObject.SetActive(false); // ���� �����
-        }
-
-        // 실제 날짜들 생성
-        for (int i = 0; i < dayDataList.Count; i++)
-        {
-            GameObject cell = Instantiate(dateCellPrefab, dateGrid);
-            TMP_Text cellText = cell.GetComponentInChildren<TMP_Text>();
-            cellText.text = dayDataList[i].day.ToString();
-
-            // 출석하지 않은 날은 글자색을 회색으로 변경
-            if (!dayDataList[i].isAttended) cellText.color = new Color32(153, 153, 153, 255);
-            else cellText.color = new Color32(255, 138, 61, 255);
-        }
-
-            DrawStreakBars(dayDataList, offset);
-    }
-
-    private void DrawStreakBars(List<CalendarDayData> days, int offset)
-    {
-        int startDayIndex = -1;
-
-        for (int i = 0; i < days.Count; i++)
-        {
-            int gridIndex = i + offset; // 그리드 전체에서의 실제 위치
-
-            if (days[i].isAttended)
-            {
-                // 연속 학습 시작점 기록
-                if (startDayIndex == -1)
-                    startDayIndex = i;
-
-                if (gridIndex % 7 == 6)
-                {
-                    CreateBar(startDayIndex, i, offset);
-                    startDayIndex = -1; // 초기화
-                }
-            }
-            else
-            {
-                // 출석을 안 했는데 지금까지 이어지던 연속 학습이 있었다면 막대 생성 후 종료
-                if (startDayIndex != -1)
-                {
-                    CreateBar(startDayIndex, i - 1, offset);
-                    startDayIndex = -1;
-                }
-            }
-        }
-
-        // 월말까지 꽉 채워서 연속 학습 중인 경우 마지막 막대 생성
-        if (startDayIndex != -1) CreateBar(startDayIndex, days.Count - 1, offset);
-    }
-
-    private void CreateBar(int start, int end, int offset)
-    {
-        int startIndex = start + offset;
-        int endIndex = end + offset;
-
-        float startX = paddingLeft + (startIndex % 7) * (cellSize + spacingX);
-        float startY = -((startIndex / 7) * (cellSize + spacingY) + streakBarOffsetY); // -(paddingTop + (startIndex / 7) * (cellSize + spacingY))
-        float endX = paddingLeft + (endIndex % 7) * (cellSize + spacingX);
-
-        if (start == end)
-        {
-            GameObject circle = Instantiate(singleCirclePrefab, streakContainer);
-            RectTransform rt = circle.GetComponent<RectTransform>();
-            rt.anchoredPosition = new Vector2(startX + singleCircleOffsetX, startY - 25f);
-            rt.sizeDelta = new Vector2((endX - startX) + cellSize, rt.sizeDelta.y);
-        }
-        else
-        {
-            GameObject bar = Instantiate(streakBarPrefab, streakContainer);
-            RectTransform rt = bar.GetComponent<RectTransform>();
-            rt.anchoredPosition = new Vector2(startX + streakBarOffsetX, startY - 25f);
-            rt.sizeDelta = new Vector2((endX - startX) + cellSize, rt.sizeDelta.y);
-        }
+        if (streakDaysText != null) streakDaysText.text = $"{data.currentStreak}일째 연속 학습!";
     }
 
     public void SetMyTabActive(bool isActive)
