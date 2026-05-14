@@ -99,7 +99,12 @@ public class CalendarView : MonoBehaviour
             //GameObject emptyCell = Instantiate(dateCellPrefab, dateGrid);
             GameObject emptyCell = dateCellPool.Get();
             emptyCell.name = "DateCell";
-            emptyCell.GetComponentInChildren<TMP_Text>().gameObject.SetActive(false);
+
+            emptyCell.transform.SetAsLastSibling();
+
+            TMP_Text emptyText = emptyCell.GetComponentInChildren<TMP_Text>(true);
+            if (emptyText != null) emptyText.gameObject.SetActive(false);
+
             activeObjects.Add(emptyCell);
         }
 
@@ -108,20 +113,27 @@ public class CalendarView : MonoBehaviour
             //GameObject cell = Instantiate(dateCellPrefab, dateGrid);
             GameObject cell = dateCellPool.Get();
             cell.name = "DateCell";
+
+            cell.transform.SetAsLastSibling();
             activeObjects.Add(cell);
 
-            TMP_Text cellText = cell.GetComponentInChildren<TMP_Text>();
-            cellText.gameObject.SetActive(true);
-            cellText.text = dayDataList[i].day.ToString();
+            TMP_Text cellText = cell.GetComponentInChildren<TMP_Text>(true);
+            if (cellText != null)
+            {
+                cellText.gameObject.SetActive(true);
+                cellText.text = dayDataList[i].day.ToString();
 
-            if (!dayDataList[i].isAttended) cellText.color = new Color32(153, 153, 153, 255);
-            else cellText.color = new Color32(255, 138, 61, 255);
+                if (!dayDataList[i].isAttended) cellText.color = new Color32(153, 153, 153, 255);
+                else cellText.color = new Color32(255, 138, 61, 255);
+            }
         }
         DrawStreakBars(dayDataList, offset);
     }
 
     private void DrawStreakBars(List<CalendarDayData> days, int offset)
     {
+        Canvas.ForceUpdateCanvases();
+
         int startDayIndex = -1;
         for (int i = 0; i < days.Count; i++)
         {
@@ -129,7 +141,8 @@ public class CalendarView : MonoBehaviour
             if (days[i].isAttended)
             {
                 if (startDayIndex == -1) startDayIndex = i;
-                if (gridIndex % 7 == 6)
+
+                if (gridIndex % 7 == 6) // 토요일 (줄바꿈)
                 {
                     CreateBar(startDayIndex, i, offset);
                     startDayIndex = -1;
@@ -152,31 +165,59 @@ public class CalendarView : MonoBehaviour
         int startIndex = start + offset;
         int endIndex = end + offset;
 
-        float startX = paddingLeft + (startIndex % 7) * (cellSize + spacingX);
-        float startY = -((startIndex / 7) * (cellSize + spacingY) + streakBarOffsetY);
-        float endX = paddingLeft + (endIndex % 7) * (cellSize + spacingX);
+        //float cellTotalX = cellSize + spacingX;
+        //float cellTotalY = cellSize + spacingY;
 
-        GameObject obj;
+        RectTransform startCell = dateGrid.GetChild(startIndex) as RectTransform;
+        RectTransform endCell = dateGrid.GetChild(endIndex) as RectTransform;
+
+        Vector2 GetCellCenter(RectTransform rt)
+        {
+            Vector2 size = rt.rect.size;
+            Vector2 pivot = rt.pivot;
+            float dx = size.x * (0.5f - pivot.x);
+            float dy = size.y * (0.5f - pivot.y);
+            return (Vector2)rt.localPosition + new Vector2(dx, dy);
+        }
+
+        Vector2 startPos = startCell.localPosition;
+        Vector2 endPos = endCell.localPosition;
+
+        Vector2 startCenter = GetCellCenter(startCell);
+        Vector2 endCenter = GetCellCenter(endCell);
+
+        //float startX = paddingLeft + (startIndex % 7) * cellTotalX;
+        //float startY = -(paddingTop + (startIndex / 7) * cellTotalY);
+        //float endX = paddingLeft + (endIndex % 7) * cellTotalX;
+        //float width = (endX - startX) + cellSize;
+
+        //float targetCenterX = startX + cellSize * 0.5f;
+        //float targetCenterY = startY - cellSize * 0.5f;
+
+        //GameObject obj;
+        float yOffset = cellSize * 0.45f;
         if (start == end)
         {
-            //GameObject circle = Instantiate(singleCirclePrefab, streakContainer);
-            //RectTransform rt = circle.GetComponent<RectTransform>();
-            obj = singleCirclePool.Get();
+            GameObject obj = singleCirclePool.Get();
             obj.name = "SingleCircle";
+            activeObjects.Add(obj);
+
             RectTransform rt = obj.GetComponent<RectTransform>();
-            rt.anchoredPosition = new Vector2(startX + singleCircleOffsetX, startY - 10f);
-            //rt.sizeDelta = new Vector2((endX - startX) + cellSize, rt.sizeDelta.y);
+            rt.localPosition = startCenter + new Vector2(0, yOffset);
         }
         else
         {
-            //GameObject bar = Instantiate(streakBarPrefab, streakContainer);
-            //RectTransform rt = bar.GetComponent<RectTransform>();
-            obj = streakBarPool.Get();
+            GameObject obj = streakBarPool.Get();
             obj.name = "StreakBar";
+            activeObjects.Add(obj);
+
             RectTransform rt = obj.GetComponent<RectTransform>();
-            rt.anchoredPosition = new Vector2(startX + streakBarOffsetX, startY - 10f);
-            rt.sizeDelta = new Vector2((endX - startX) + cellSize, rt.sizeDelta.y);
+
+            float barWidth = (endCenter.x - startCenter.x) + cellSize;
+            Vector2 barCenter = new Vector2((startPos.x + endPos.x) * 0.5f, startPos.y);
+
+            rt.localPosition = barCenter + new Vector2(0, yOffset);
+            rt.sizeDelta = new Vector2(barWidth, rt.sizeDelta.y);
         }
-        activeObjects.Add(obj);
     }
 }
