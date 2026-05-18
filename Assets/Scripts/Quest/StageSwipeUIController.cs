@@ -30,55 +30,15 @@ public class StageSwipeUIController : MonoBehaviour
     private bool isSwiping = false; // 현재 스와이프 중인지
     private float circleContentScale = 0.5f;    // 현재 페이지의 원 크기(배율)
 
-    // 더미데이터
-    private string stageDetailDummyData = @"
-    {
-      ""isSuccess"": true,
-      ""data"": {
-        ""stageId"": 1,
-        ""title"": ""카페에서 주문하기"",
-        ""description"": ""카페에서 음료를 주문하는 상황을 연습합니다."",
-        ""status"": ""UNLOCKED"",
-        ""quests"": [
-          {
-            ""questId"": 1,
-            ""title"": ""인사하고 메뉴판 받기"",
-            ""description"": ""점원에게 인사하고 메뉴판을 요청하세요."",
-            ""sortOrder"": 1,
-            ""isCompleted"": true,
-            ""attemptCount"": 2
-          },
-          {
-            ""questId"": 2,
-            ""title"": ""음료 주문하기"",
-            ""description"": ""원하는 음료와 수량을 말하세요."",
-            ""sortOrder"": 2,
-            ""isCompleted"": false,
-            ""attemptCount"": 1
-          },
-          {
-            ""questId"": 3,
-            ""title"": ""결제 및 인사"",
-            ""description"": ""결제 수단을 선택하고 작별 인사를 하세요."",
-            ""sortOrder"": 3,
-            ""isCompleted"": false,
-            ""attemptCount"": 0
-          }
-        ]
-      },
-      ""code"": null,
-      ""message"": null
-    }";
-
     public void Start()
     {
-        Init(5, 2); // 테스트용 코드
+        int stageCount = StageManager.Instance.GetStageCount();
+        int selectedStageId = StageManager.Instance.SelectedStageId;
+        Init(stageCount, selectedStageId);
     }
 
-    public void Init(int stageCount, int selectedStageId)
+    public void Init(int stageCount = 1, int selectedStageId = 1)
     {
-        StageDetailResponse stageDetailResponse = JsonUtility.FromJson<StageDetailResponse>(stageDetailDummyData);
-        // TODO : api 호출해서 페이지 수 세팅
         maxPage = stageCount;
 
         SetPrefabs(maxPage);
@@ -129,7 +89,7 @@ public class StageSwipeUIController : MonoBehaviour
             GameObject page = Instantiate(pagePrefab, transform);
             GameObject indicator = Instantiate(indicatorPrefab, indicatorParent);
 
-            page.GetComponent<QuestPanelUIController>().SetStageName($"Stage {i + 1}");
+            page.GetComponent<QuestPanelUIController>().SetQuestPanel(i + 1);
         }
     }
 
