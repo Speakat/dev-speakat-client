@@ -42,6 +42,13 @@ public class RecordButtonController : MonoBehaviour
 
     void StartRecording()
     {
+        if (!HasMicrophonePermission())
+        {
+            Debug.LogWarning("마이크 권한이 허용되지 않았습니다.");
+            RequestMicrophonePermission();
+            return;
+        }
+
         if (Microphone.devices.Length == 0)
         {
             Debug.LogError("연결된 마이크가 없습니다.");
@@ -165,6 +172,17 @@ public class RecordButtonController : MonoBehaviour
     void OnDestroy()
     {
         if (_isRecording) Microphone.End(_activeDevice);
+    }
+
+    private bool HasMicrophonePermission()
+    {
+#if UNITY_ANDROID
+        return Permission.HasUserAuthorizedPermission(Permission.Microphone);
+#elif UNITY_IOS
+        return Application.HasUserAuthorization(UserAuthorization.Microphone);
+#else
+        return true;
+#endif
     }
 
     private void RequestMicrophonePermission()
