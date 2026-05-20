@@ -109,10 +109,11 @@ public class RecordButtonController : MonoBehaviour
         Destroy(_clip);
         Destroy(trimmedClip);
         
-        StartCoroutine(UploadWav());
+        string base64Wav = System.Convert.ToBase64String(wavBytes);
+        StartCoroutine(UploadWav(base64Wav));
     }
 
-    IEnumerator UploadWav()
+    IEnumerator UploadWav(string base64Wav)
     {
         recordButton.interactable = true;
     }
