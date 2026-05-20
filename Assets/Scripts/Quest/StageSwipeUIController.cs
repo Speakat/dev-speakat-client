@@ -28,18 +28,21 @@ public class StageSwipeUIController : MonoBehaviour
     private float startTouchPositionX; // 터치 시작 위치
     private float endTouchPositionX; // 터치 종료 위치
     private bool isSwiping = false; // 현재 스와이프 중인지
-    private float circleContentScale = 0.5f;	// 현재 페이지의 원 크기(배율)
+    private float circleContentScale = 0.5f;    // 현재 페이지의 원 크기(배율)
 
-    private void Awake()
+    public void Start()
     {
-        // TODO : api 호출해서 페이지 수 세팅
-        maxPage = 5; // 임시로 5로 세팅
-
-        SetPrefabs(maxPage);
+        int stageCount = StageManager.Instance.GetStageCount();
+        int selectedStageId = SceneContext.SelectedStageId;
+        Init(stageCount, selectedStageId);
     }
 
-    private void Start()
+    public void Init(int stageCount = 1, int selectedStageId = 1)
     {
+        maxPage = stageCount;
+
+        SetPrefabs(maxPage);
+
         int pageCount = transform.childCount;
         scrollPageValues = new float[pageCount];
 
@@ -70,8 +73,13 @@ public class StageSwipeUIController : MonoBehaviour
             indicatorContents[i] = indicatorParent.GetChild(i);
         }
 
-        // 최초 시작할 때 0번 설정
-        SetScrollBarValue(0);
+        // 선택된 스테이지 설정
+        int targetIndex = selectedStageId - 1;
+        if (targetIndex < 0 || targetIndex >= maxPage)
+        {
+            targetIndex = 0;
+        }
+        SetScrollBarValue(targetIndex);
     }
 
     private void SetPrefabs(int count)
@@ -81,7 +89,7 @@ public class StageSwipeUIController : MonoBehaviour
             GameObject page = Instantiate(pagePrefab, transform);
             GameObject indicator = Instantiate(indicatorPrefab, indicatorParent);
 
-            page.GetComponent<QuestPanelUIController>().SetStageName($"Stage {i + 1}");
+            page.GetComponent<QuestPanelUIController>().SetQuestPanel(i + 1);
         }
     }
 

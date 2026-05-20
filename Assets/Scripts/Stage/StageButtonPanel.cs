@@ -1,12 +1,34 @@
 using UnityEngine;
+using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 public class StageButtonPanel : MonoBehaviour
 {
     [SerializeField]
-    private GameObject stageButton;
+    private RectTransform buttonRect;
 
-    public void SetButtonPosition(float dx)
+    [SerializeField]
+    private Button buttonComponent;
+    public int StageId { get; set; }
+    public string StageStatus { get; set; }
+
+    public void SetStageButton(float dx, int id, string status)
     {
-        stageButton.GetComponent<RectTransform>().anchoredPosition += new Vector2(dx, 0);
+        StageId = id;
+        StageStatus = status;
+
+        // 버튼 위치 세팅
+        buttonRect.anchoredPosition += new Vector2(dx, 0);
+
+        // onClick 리스너 세팅
+        buttonComponent.onClick.RemoveAllListeners();
+        buttonComponent.onClick.AddListener(SelectStage);
+    }
+
+    public void SelectStage()
+    {
+        Debug.Log("Selected Stage: " + StageId + ", " + StageStatus);
+        SceneContext.SetSelectedStage(StageId);
+        SceneManager.LoadScene("QuestScene");
     }
 }
