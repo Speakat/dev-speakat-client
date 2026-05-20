@@ -108,6 +108,13 @@ public class RecordButtonController : MonoBehaviour
 
         Destroy(_clip);
         Destroy(trimmedClip);
+        
+        StartCoroutine(UploadWav());
+    }
+
+    IEnumerator UploadWav()
+    {
+        recordButton.interactable = true;
     }
 
     AudioClip TrimClip(AudioClip source, int sampleCount)
