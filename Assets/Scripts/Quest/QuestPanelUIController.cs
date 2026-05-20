@@ -56,6 +56,8 @@ public class QuestPanelUIController : MonoBehaviour
         stageNameText.text = stageName;
     }
 
+    // TODO: API 연동 시 더미 파싱을 FetchStageDetail(stageId) 호출로 교체
+    //       슬라이드 전환 시 인접 스테이지 선호출 + 캐싱 구조 함께 적용 예정
     public void SetQuestPanel(int stageId = 1)
     {
         stageDetailResponse = JsonUtility.FromJson<StageDetailResponse>(stageDetailDummyData);
