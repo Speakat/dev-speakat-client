@@ -33,7 +33,7 @@ public class StageSwipeUIController : MonoBehaviour
     public void Start()
     {
         int stageCount = StageManager.Instance.GetStageCount();
-        int selectedStageId = StageManager.Instance.SelectedStageId;
+        int selectedStageId = SceneContext.SelectedStageId;
         Init(stageCount, selectedStageId);
     }
 

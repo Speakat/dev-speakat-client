@@ -1,16 +1,16 @@
 using UnityEngine;
+
 public class StageManager : MonoBehaviour
 {
-  [SerializeField]
-  private StageScrollUIController stageScrollUIController;
-  public static StageManager Instance { get; private set; }
-  StageData stageListData;
-  public StageData StageListData { get { return stageListData; } }
-  private int selectedStageId; // 선택한 스테이지 저장
-  public int SelectedStageId { get; private set; }
+    [SerializeField]
+    private StageScrollUIController stageScrollUIController;
 
-  // 더미 데이터
-  private string stageListDummyData = @"
+    public static StageManager Instance { get; private set; }
+
+    private StageData stageListData;
+    public StageData StageListData => stageListData;
+
+    private string stageListDummyData = @"
     {
       ""isSuccess"": true,
       ""data"": {
@@ -46,37 +46,28 @@ public class StageManager : MonoBehaviour
       }
     }";
 
-  private void Awake()
-  {
-    // 싱글톤 구조
-    if (Instance == null)
+    private void Awake()
     {
-      Instance = this;
-      DontDestroyOnLoad(gameObject);
+        if (Instance == null)
+        {
+            Instance = this;
+            DontDestroyOnLoad(gameObject);
+        }
+        else if (Instance != this)
+        {
+            Destroy(gameObject);
+            return;
+        }
     }
-    else if (Instance != this)
+
+    void Start()
     {
-      Destroy(gameObject);
-      return;
+        stageListData = JsonUtility.FromJson<StageData>(stageListDummyData);
+        stageScrollUIController.SetStageScrollUI(stageListData.data);
     }
-  }
 
-  void Start()
-  {
-    // JSON 데이터 파싱
-    stageListData = JsonUtility.FromJson<StageData>(stageListDummyData);
-
-    // 스테이지 UI 업데이트
-    stageScrollUIController.SetStageScrollUI(stageListData.data);
-  }
-
-  public void SetSelectedStageId(int id)
-  {
-    SelectedStageId = id;
-  }
-
-  public int GetStageCount()
-  {
-    return stageListData.data.items.Count;
-  }
+    public int GetStageCount()
+    {
+        return stageListData.data.items.Count;
+    }
 }

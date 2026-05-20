@@ -28,7 +28,7 @@ public class StageButtonPanel : MonoBehaviour
     public void SelectStage()
     {
         Debug.Log("Selected Stage: " + StageId + ", " + StageStatus);
-        StageManager.Instance.SetSelectedStageId(StageId);
+        SceneContext.SetSelectedStage(StageId);
         SceneManager.LoadScene("QuestScene");
     }
 }
