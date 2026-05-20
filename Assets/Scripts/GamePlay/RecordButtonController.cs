@@ -116,6 +116,8 @@ public class RecordButtonController : MonoBehaviour
     IEnumerator UploadWav(string base64Wav)
     {
         recordButton.interactable = true;
+
+        yield break;
     }
 
     AudioClip TrimClip(AudioClip source, int sampleCount)
