@@ -236,7 +236,7 @@ RectTransform:
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
+  m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 6668138897342146273}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -275,15 +275,15 @@ MonoBehaviour:
       m_Calls: []
   m_text: Stage
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 361e06a0c9b6ac3459b90609b0f59b37, type: 2}
-  m_sharedMaterial: {fileID: -8784942752870376773, guid: 361e06a0c9b6ac3459b90609b0f59b37, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 91c50901bdbaf6f468536312be9cfe60, type: 2}
+  m_sharedMaterial: {fileID: 6359488471637456199, guid: 91c50901bdbaf6f468536312be9cfe60, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4278190080
-  m_fontColor: {r: 0, g: 0, b: 0, a: 1}
+    rgba: 4287072135
+  m_fontColor: {r: 0.5294118, g: 0.5294118, b: 0.5294118, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
   m_fontColorGradient:
