@@ -25,10 +25,14 @@ public class VocabularyView : MonoBehaviour
     [SerializeField] private GameObject filterTabPrefab; // 필터 탭 버튼 프리팹
     [SerializeField] private GameObject vocaCardPrefab;
 
+    [SerializeField] private FlashCardView flashCardView;
+
     private IObjectPool<GameObject> vocaCardPool;
     private List<GameObject> activeCards = new List<GameObject>();
 
     private List<FilterTab> activeTabs = new List<FilterTab>();
+
+    private VocabularyData currentData;
 
     void Awake()
     {
@@ -102,6 +106,8 @@ public class VocabularyView : MonoBehaviour
 
     public void UpdateUI(VocabularyData data)
     {
+        currentData = data;
+
         // 1. 필터 탭 동적 생성 (나중에 풀링으로)
         foreach (Transform child in filterTabContent) Destroy(child.gameObject); // 기존 탭 초기화
         activeTabs.Clear();
@@ -193,5 +199,22 @@ public class VocabularyView : MonoBehaviour
             var btn = vocabTabIcon.GetComponentInParent<Button>();
             if (btn != null) btn.interactable = !isActive;
         }
+    }
+
+    public void OpenFlashCards()
+    {
+        if (flashCardView == null)
+        {
+            Debug.LogError("[Vocabulary View] flashCardView 연결 안됨");
+            return;
+        }
+
+        if (currentData == null || currentData.wordList == null || currentData.wordList.Count == 0)
+        {
+            Debug.LogWarning("[Vocabulary View] flashCard로 보여줄 단어 X");
+            return;
+        }
+
+        flashCardView.Open(currentData.wordList, 0);
     }
 }
