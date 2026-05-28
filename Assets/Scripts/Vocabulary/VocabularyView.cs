@@ -1,4 +1,4 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using System.Collections.Generic;
@@ -6,23 +6,23 @@ using UnityEngine.Pool;
 
 public class VocabularyView : MonoBehaviour
 {
-    // ÃßÈÄ ¿ä±¸»çÇ×¿¡ ¸Â°Ô ¼­ºê ºäµéÀÌ Ãß°¡µÉ ÀÚ¸®¸¦ ¹Ì¸® ºñ¿öµÒ
+    // ì¶”í›„ ìš”êµ¬ì‚¬í•­ì— ë§ê²Œ ì„œë¸Œ ë·°ë“¤ì´ ì¶”ê°€ë  ìë¦¬ë¥¼ ë¯¸ë¦¬ ë¹„ì›Œë‘ 
     // [Header("Child Views")]
     // [SerializeField] private VocabularyMainView vocabMainView;
     // [SerializeField] private WordReviewView wordReviewView;
 
     [Header("UI References")]
 
-    [SerializeField] private Image vocabTabIcon; // ´Ü¾îÀå ÅÇ ¾ÆÀÌÄÜ º¯¼ö¸í º¯°æ
+    [SerializeField] private Image vocabTabIcon; // ë‹¨ì–´ì¥ íƒ­ ì•„ì´ì½˜ ë³€ìˆ˜ëª… ë³€ê²½
 
     [SerializeField] private Color activeColor = new Color32(255, 138, 61, 255);
     [SerializeField] private Color inactiveColor = new Color32(170, 170, 170, 255);
 
-    [SerializeField] private Transform filterTabContent; // ÇÊÅÍ ÅÇµéÀÌ µé¾î°¥ ºÎ¸ğ
-    [SerializeField] private Transform wordListContent;  // ´Ü¾î Ä«µåµéÀÌ µé¾î°¥ ºÎ¸ğ
+    [SerializeField] private Transform filterTabContent; // í•„í„° íƒ­ë“¤ì´ ë“¤ì–´ê°ˆ ë¶€ëª¨
+    [SerializeField] private Transform wordListContent;  // ë‹¨ì–´ ì¹´ë“œë“¤ì´ ë“¤ì–´ê°ˆ ë¶€ëª¨
 
     [Header("Prefabs")]
-    [SerializeField] private GameObject filterTabPrefab; // ÇÊÅÍ ÅÇ ¹öÆ° ÇÁ¸®ÆÕ
+    [SerializeField] private GameObject filterTabPrefab; // í•„í„° íƒ­ ë²„íŠ¼ í”„ë¦¬íŒ¹
     [SerializeField] private GameObject vocaCardPrefab;
 
     private IObjectPool<GameObject> vocaCardPool;
@@ -32,36 +32,68 @@ public class VocabularyView : MonoBehaviour
 
     void Awake()
     {
-        // 1. ´Ü¾î Ä«µå Ç®¸µ ÃÊ±âÈ­
         vocaCardPool = new ObjectPool<GameObject>(
-            createFunc: () => Instantiate(vocaCardPrefab, wordListContent),
-            actionOnGet: (obj) => obj.SetActive(true),
+            createFunc: () =>
+            {
+                GameObject obj = Instantiate(vocaCardPrefab, wordListContent, false);
+
+                RectTransform rt = obj.GetComponent<RectTransform>();
+                rt.localScale = Vector3.one;
+                rt.localRotation = Quaternion.identity;
+                rt.anchoredPosition = Vector2.zero;
+
+                return obj;
+            },
+            actionOnGet: (obj) =>
+            {
+                obj.transform.SetParent(wordListContent, false);
+                obj.transform.SetAsLastSibling();
+
+                RectTransform rt = obj.GetComponent<RectTransform>();
+                rt.localScale = Vector3.one;
+                rt.localRotation = Quaternion.identity;
+                rt.anchoredPosition = Vector2.zero;
+
+                obj.SetActive(true);
+            },
             actionOnRelease: (obj) => obj.SetActive(false),
             actionOnDestroy: (obj) => Destroy(obj),
-            defaultCapacity: 10, maxSize: 50);
+            defaultCapacity: 10,
+            maxSize: 50
+        );
     }
 
     void Start()
     {
         if (vocabTabIcon != null) vocabTabIcon.color = new Color32(255, 138, 61, 255);
 
-        // ¼­¹ö ¿¬µ¿ ½Ã API È£Ãâ·Î ´ëÃ¼
+        // ì„œë²„ ì—°ë™ ì‹œ API í˜¸ì¶œë¡œ ëŒ€ì²´
         LoadDummyData();
     }
 
     private void LoadDummyData()
     {
-        // ¼­¹ö¿¡¼­ ¿Ô´Ù°í °¡Á¤ÇÏ´Â °¡Â¥ µ¥ÀÌÅÍ
+        // ì„œë²„ì—ì„œ ì™”ë‹¤ê³  ê°€ì •í•˜ëŠ” ê°€ì§œ ë°ì´í„°
         VocabularyData dummyData = new VocabularyData
         {
-            questFilters = new List<string> { "ÀüÃ¼", "Áñ°ÜÃ£±â", "¹æ±İ", "¸¶Æ® °¡±â", "Ä«Æä °¡±â" },
+            questFilters = new List<string> { "ì „ì²´", "ì¦ê²¨ì°¾ê¸°", "ë°©ê¸ˆ", "ë§ˆíŠ¸ ê°€ê¸°", "ì¹´í˜ ê°€ê¸°", "ê³µí•­ ê°€ê¸°", "ì²´í¬ì¸ í•˜ê¸°" },
             wordList = new List<WordData>
             {
-                new WordData { word = "market", meaning = "½ÃÀå, ¸¶Æ®", questName = "Quest 1" },
-                new WordData { word = "avocado", meaning = "¾Æº¸Ä«µµ", questName = "Quest 1" },
-                new WordData { word = "receipt", meaning = "¿µ¼öÁõ", questName = "Quest 1" },
-                new WordData { word = "milk", meaning = "¿ìÀ¯", questName = "Quest 1" },
-                new WordData { word = "aisle", meaning = "Åë·Î, º¹µµ", questName = "Quest 3" }
+                new WordData { word = "market", pronunciation = "/ËˆmÉ‘ËrkÉªt/", meaning = "1. ì‹œì¥, ê°€ê²Œ\n2. íŒë§¤í•˜ë‹¤, ë§ˆì¼€íŒ…í•˜ë‹¤, ë‚´ë†“ë‹¤", questName = "Quest 1" },
+                new WordData { word = "avocado", pronunciation = "/ËŒÃ¦vÉ™ËˆkÉ‘ËdoÊŠ/", meaning = "1. ì•„ë³´ì¹´ë„", questName = "Quest 1" },
+                new WordData { word = "receipt", pronunciation = "/rÉªËˆsiËt/", meaning = "1. ì˜ìˆ˜ì¦\n2. ìˆ˜ë ¹", questName = "Quest 1" },
+                new WordData { word = "milk", pronunciation = "/mÉªlk/", meaning = "1. ìš°ìœ \n2. ì§œë‚´ë‹¤", questName = "Quest 1" },
+                new WordData { word = "aisle", pronunciation = "/aÉªl/", meaning = "1. í†µë¡œ, ë³µë„", questName = "Quest 3" },
+                new WordData { word = "cart", pronunciation = "/kÉ‘Ërt/", meaning = "1. ì¹´íŠ¸, ìˆ˜ë ˆ", questName = "ë§ˆíŠ¸ ê°€ê¸°" },
+                new WordData { word = "cashier", pronunciation = "/kÃ¦ËˆÊƒÉªr/", meaning = "1. ê³„ì‚°ì›", questName = "ë§ˆíŠ¸ ê°€ê¸°" },
+                new WordData { word = "discount", pronunciation = "/ËˆdÉªskaÊŠnt/", meaning = "1. í• ì¸\n2. í• ì¸í•˜ë‹¤", questName = "ë§ˆíŠ¸ ê°€ê¸°" },
+                new WordData { word = "checkout", pronunciation = "/ËˆtÊƒekaÊŠt/", meaning = "1. ê³„ì‚°ëŒ€\n2. ê²°ì œ", questName = "ë§ˆíŠ¸ ê°€ê¸°" },
+                new WordData { word = "coupon", pronunciation = "/ËˆkuËpÉ‘Ën/", meaning = "1. ì¿ í°", questName = "ë§ˆíŠ¸ ê°€ê¸°" },
+                new WordData { word = "bakery", pronunciation = "/ËˆbeÉªkÉ™ri/", meaning = "1. ë¹µì§‘, ì œê³¼ì ", questName = "ì¹´í˜ ê°€ê¸°" },
+                new WordData { word = "order", pronunciation = "/ËˆÉ”ËrdÉ™r/", meaning = "1. ì£¼ë¬¸\n2. ì£¼ë¬¸í•˜ë‹¤", questName = "ì¹´í˜ ê°€ê¸°" },
+                new WordData { word = "menu", pronunciation = "/ËˆmenjuË/", meaning = "1. ë©”ë‰´", questName = "ì¹´í˜ ê°€ê¸°" },
+                new WordData { word = "takeout", pronunciation = "/ËˆteÉªkaÊŠt/", meaning = "1. í¬ì¥ ìŒì‹\n2. í¬ì¥", questName = "ì¹´í˜ ê°€ê¸°" },
+                new WordData { word = "straw", pronunciation = "/strÉ”Ë/", meaning = "1. ë¹¨ëŒ€", questName = "ì¹´í˜ ê°€ê¸°" }
             }
         };
 
@@ -70,18 +102,24 @@ public class VocabularyView : MonoBehaviour
 
     public void UpdateUI(VocabularyData data)
     {
-        // 1. ÇÊÅÍ ÅÇ µ¿Àû »ı¼º (³ªÁß¿¡ Ç®¸µÀ¸·Î ¹Ù²ãµµ µÊ)
-        foreach (Transform child in filterTabContent) Destroy(child.gameObject); // ±âÁ¸ ÅÇ ÃÊ±âÈ­
+        // 1. í•„í„° íƒ­ ë™ì  ìƒì„± (ë‚˜ì¤‘ì— í’€ë§ìœ¼ë¡œ)
+        foreach (Transform child in filterTabContent) Destroy(child.gameObject); // ê¸°ì¡´ íƒ­ ì´ˆê¸°í™”
         activeTabs.Clear();
 
         for (int i = 0; i < data.questFilters.Count; i++)
         {
-            GameObject tabObj = Instantiate(filterTabPrefab, filterTabContent);
+            GameObject tabObj = Instantiate(filterTabPrefab, filterTabContent, false);
+
+            RectTransform tabRt = tabObj.GetComponent<RectTransform>();
+            tabRt.localScale = Vector3.one;
+            tabRt.localRotation = Quaternion.identity;
+            tabRt.anchoredPosition = Vector2.zero;
+
             FilterTab tabScript = tabObj.GetComponent<FilterTab>();
 
             if (tabScript != null)
             {
-                // Ã¹ ¹øÂ° ÅÇ(i == 0)¸¸ ±âº»À¸·Î ¼±ÅÃµÇ°Ô(true) ¼¼ÆÃ
+                // ì²« ë²ˆì§¸ íƒ­(i == 0)ë§Œ ê¸°ë³¸ìœ¼ë¡œ ì„ íƒë˜ê²Œ(true) ì„¸íŒ…
                 bool isFirstTab = (i == 0);
                 tabScript.Setup(data.questFilters[i], isFirstTab, OnFilterTabClicked);
 
@@ -89,25 +127,53 @@ public class VocabularyView : MonoBehaviour
             }
         }
 
-        foreach (string filter in data.questFilters)
-        {
-            GameObject tab = Instantiate(filterTabPrefab, filterTabContent);
-            tab.GetComponentInChildren<TMP_Text>().text = filter;
-        }
+        //foreach (string filter in data.questFilters)
+        //{
+        //    GameObject tab = Instantiate(filterTabPrefab, filterTabContent);
+        //    tab.GetComponentInChildren<TMP_Text>().text = filter;
+        //}
 
-        // 2. ´Ü¾î Ä«µå »ı¼º (¿ÀºêÁ§Æ® Ç®¸µ »ç¿ë)
+        // 2. ë‹¨ì–´ ì¹´ë“œ ìƒì„± (ì˜¤ë¸Œì íŠ¸ í’€ë§ ì‚¬ìš©)
         foreach (var card in activeCards) vocaCardPool.Release(card);
         activeCards.Clear();
 
         foreach (WordData wordData in data.wordList)
         {
             GameObject cardObj = vocaCardPool.Get();
-            cardObj.transform.SetAsLastSibling(); // ¼ø¼­ ²¿ÀÓ ¹æÁö
+            cardObj.transform.SetAsLastSibling();
+
+            RectTransform rt = cardObj.GetComponent<RectTransform>();
+            rt.localScale = Vector3.one;
+            rt.localRotation = Quaternion.identity;
+            rt.anchoredPosition = Vector2.zero;
 
             VocaCard cardScript = cardObj.GetComponent<VocaCard>();
             if (cardScript != null) cardScript.Setup(wordData);
 
+            Debug.Log(
+                $"[VocaCard ìƒì„± í™•ì¸] " +
+                $"name={cardObj.name}, " +
+                $"activeSelf={cardObj.activeSelf}, " +
+                $"activeInHierarchy={cardObj.activeInHierarchy}, " +
+                $"parent={cardObj.transform.parent.name}, " +
+                $"pos={rt.anchoredPosition}, " +
+                $"rectSize={rt.rect.size}, " +
+                $"scale={rt.localScale}"
+            );
+
             activeCards.Add(cardObj);
+        }
+
+        Canvas.ForceUpdateCanvases();
+
+        if (filterTabContent is RectTransform filterRect)
+        {
+            LayoutRebuilder.ForceRebuildLayoutImmediate(filterRect);
+        }
+
+        if (wordListContent is RectTransform wordRect)
+        {
+            LayoutRebuilder.ForceRebuildLayoutImmediate(wordRect);
         }
     }
 
@@ -115,7 +181,7 @@ public class VocabularyView : MonoBehaviour
     {
         foreach (var tab in activeTabs) tab.SetSelected(tab == clickedTab);
 
-        Debug.Log($"[{clickedTab.FilterName}] ÇÊÅÍ Àû¿ë");
+        Debug.Log($"[{clickedTab.FilterName}] í•„í„° ì ìš©");
     }
 
     public void SetVocabTabActive(bool isActive)
