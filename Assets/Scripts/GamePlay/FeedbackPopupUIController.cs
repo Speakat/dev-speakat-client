@@ -6,18 +6,20 @@ using UnityEngine.UI;
 public class FeedbackPopupUIController : MonoBehaviour
 {
     [SerializeField]
-    private Button replayButton;
+    private Button saveButton;
     [SerializeField]
-    private Button continueButton;
+    private Button replayButton;
     [SerializeField]
     private TextMeshProUGUI feedbackText;
     [SerializeField]
     private TextMeshProUGUI wordText;
+    [SerializeField]
+    private TextMeshProUGUI meanText;
     
     private void Awake()
     {
         replayButton.onClick.AddListener(ReplayDialogue);
-        continueButton.onClick.AddListener(ContinueDialogue);
+        saveButton.onClick.AddListener(SaveWord);
     }
 
     public void SetFeedback(string feedback)
@@ -30,15 +32,19 @@ public class FeedbackPopupUIController : MonoBehaviour
         wordText.text = word;
     }
 
+    public void SetMean(string mean)
+    {
+        meanText.text = mean;
+    }
+
     // 해당 대화 재시작
     private void ReplayDialogue()
     {
-        Debug.Log("대화를 재시작합니다.");
         gameObject.SetActive(false);
     }
 
-    // 다음 대화로 이동
-    private void ContinueDialogue()
+    // 단어 저장
+    private void SaveWord()
     {
         gameObject.SetActive(false);
     }

@@ -50,7 +50,8 @@ public class QuestItem
     public int questId;
     public string title;
     public string description;
+    public string thumbnailUrl;
     public int sortOrder;
-    public bool isCompleted;
+    public string status;
     public int attemptCount;
 }

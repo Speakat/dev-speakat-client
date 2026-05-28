@@ -15,22 +15,28 @@ public class StageScrollUIController : MonoBehaviour
             // 현재 생성하는 버튼의 스테이지 ID 가져오기
             int currentStageId = stageList.items[i].stageId;
             string currentStageStatus = stageList.items[i].status;
+            string currentStageTitle = stageList.items[i].title;
 
             // 배치 예시 (지그재그 위치)
-            float dValue = 100f; // 위치 간격
-            float dx = 0f;       // 기본값 (중앙 배치 시 이동 x)
+            float dValue = 180f; // 위치 간격
+            float dx = 0f;       // 기본값
 
-            int d = i % 4;
+            int d = i % 2;
             if (d == 0) // 왼쪽
             {
                 dx = -dValue;
             }
-            else if (d == 2) // 오른쪽
+            else if (d == 1) // 오른쪽
             {
                 dx = dValue;
             }
 
-            buttonPanel.SetStageButton(dx, currentStageId, currentStageStatus);
+            if (i == 0) // 첫 번째 버튼은 선 숨기기
+            {
+                buttonPanel.lineImageTransform.gameObject.SetActive(false);
+            }
+
+            buttonPanel.SetStageButton(dx, currentStageId, currentStageStatus, currentStageTitle);
         }
     }
 }

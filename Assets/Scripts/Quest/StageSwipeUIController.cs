@@ -28,7 +28,7 @@ public class StageSwipeUIController : MonoBehaviour
     private float startTouchPositionX; // 터치 시작 위치
     private float endTouchPositionX; // 터치 종료 위치
     private bool isSwiping = false; // 현재 스와이프 중인지
-    private float circleContentScale = 0.5f;    // 현재 페이지의 원 크기(배율)
+    private float circleContentScale = 1f;	// 현재 페이지의 원 크기(배율)
 
     public void Start()
     {
@@ -204,7 +204,7 @@ public class StageSwipeUIController : MonoBehaviour
             if (scrollBar.value < scrollPageValues[i] + (valueDistance / 2) && scrollBar.value > scrollPageValues[i] - (valueDistance / 2))
             {
                 indicatorContents[i].localScale = Vector2.one * circleContentScale;
-                indicatorContents[i].GetComponent<Image>().color = Color.black;
+                indicatorContents[i].GetComponent<Image>().color = new Color32(0xFF, 0x8A, 0x3D, 0xFF);
             }
         }
     }
