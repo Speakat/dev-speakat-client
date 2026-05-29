@@ -1,5 +1,6 @@
 using TMPro;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 public class ResultUIController : MonoBehaviour
@@ -29,21 +30,22 @@ public class ResultUIController : MonoBehaviour
         continueButton.onClick.AddListener(ContinueQuest);
     }
 
-    private void Start()
-    {
-        SetScore(0.85f, 0.9f, 0.8f); // 예시 점수 설정
-    }
-
     // 해당 퀘스트 재시작
     private void ReplayQuest()
     {
-        Debug.Log("퀘스트를 재시작합니다.");
+        GamePlayManager.Instance.Restart();
     }
 
     // 다음 퀘스트로 이동
     private void ContinueQuest()
     {
-        Debug.Log("다음 퀘스트로 넘어갑니다.");
+        SceneManager.LoadScene("QuestScene");
+    }
+
+    public void SetResultUI(float context, float grammar, float expression)
+    {
+        SetScore(context, grammar, expression);
+        gameObject.SetActive(true);
     }
 
     public void SetScore(float context, float grammar, float expression)
