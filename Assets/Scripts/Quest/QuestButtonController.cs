@@ -5,8 +5,6 @@ public class QuestButtonController : MonoBehaviour
 {
     private Button buttonComponent;
     private Image buttonImage;
-    [SerializeField]
-    private GameObject questPopup;
 
     [SerializeField]
     private Sprite completedSprite; // 퀘스트 완료를 나타내는 이미지
@@ -54,6 +52,6 @@ public class QuestButtonController : MonoBehaviour
     public void SelectQuest()
     {
         Debug.Log($"Selected Quest: {QuestId}, Status: {QuestCompleted}");
-        questPopup.SetActive(true);
+        QuestManager.Instance.ShowQuestPopup();
     }
 }
