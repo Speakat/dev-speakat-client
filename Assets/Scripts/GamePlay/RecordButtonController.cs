@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.IO;
 using UnityEngine;
@@ -9,8 +10,15 @@ using UnityEngine.Android;
 
 public class RecordButtonController : MonoBehaviour
 {
+    public Action<AudioClip> OnRecordingCompleted;  // 녹음 완료 시 Invoke
+
+    private void FinishRecording()
+    {
+        OnRecordingCompleted?.Invoke(_clip); 
+    }
+
     public Button recordButton;
-    public float maxRecordingSeconds = 10f;
+    private float maxRecordingSeconds = 5f;
 
     public string microphoneDevice = "";
     public int sampleRate = 16000;
@@ -38,6 +46,12 @@ public class RecordButtonController : MonoBehaviour
             StopRecording();
         else
             StartRecording();
+    }
+
+    public void SetRecordActive()
+    {
+        recordButton.interactable = true;
+        _buttonImage.color = Color.white; 
     }
 
     void StartRecording()
@@ -115,6 +129,8 @@ public class RecordButtonController : MonoBehaviour
 
     IEnumerator UploadWav(string base64Wav)
     {
+        FinishRecording();
+
         recordButton.interactable = true;
 
         yield break;
