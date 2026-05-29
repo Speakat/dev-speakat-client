@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using TMPro;
 using Unity.VisualScripting;
 using UnityEngine;
@@ -22,19 +23,22 @@ public class FeedbackPopupUIController : MonoBehaviour
         saveButton.onClick.AddListener(SaveWord);
     }
 
-    public void SetFeedback(string feedback)
+    public void SetFeedbackPopup(string feedback, List<string> suggestions)
+    {
+        SetFeedback(feedback);
+        SetWord(string.Join(", ", suggestions));
+
+        gameObject.SetActive(true);
+    }
+
+    private void SetFeedback(string feedback)
     {
         feedbackText.text = feedback;
     }
 
-    public void SetWord(string word)
+    private void SetWord(string word)
     {
         wordText.text = word;
-    }
-
-    public void SetMean(string mean)
-    {
-        meanText.text = mean;
     }
 
     // 해당 대화 재시작
