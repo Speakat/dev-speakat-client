@@ -122,7 +122,7 @@ public class GamePlayManager : MonoBehaviour
 
         if (resultUI != null)
         {
-            resultUI.SetResultUI(questResult.averageContextRelevance, questResult.averageGrammarAccuracy, questResult.averageExpressionQuality);
+            resultUI.SetResultUI(questResult.averageContextRelevance, questResult.averageGrammarAccuracy, questResult.averageExpressionQuality, questResult.isQuestSuccess);
         }
     }
 
