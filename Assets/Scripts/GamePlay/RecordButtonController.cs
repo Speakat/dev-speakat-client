@@ -17,7 +17,10 @@ public class RecordButtonController : MonoBehaviour
     public string formFieldName = "audio";
     public string authToken = "";
 
+#if !UNITY_WEBGL
     private AudioClip _clip;
+#endif
+
     private bool _isRecording;
     private Coroutine _autoStopCoroutine;
     private string _activeDevice;
@@ -26,6 +29,12 @@ public class RecordButtonController : MonoBehaviour
 
     void Start()
     {
+        if (recordButton == null)
+        {
+            Debug.LogError("[RecordButtonController] recordButton이 연결되지 않았습니다.");
+            return;
+        }
+
         _buttonImage = recordButton.GetComponent<Image>();
         recordButton.onClick.AddListener(OnRecordButtonClicked);
 
@@ -34,14 +43,23 @@ public class RecordButtonController : MonoBehaviour
 
     void OnRecordButtonClicked()
     {
+#if UNITY_WEBGL
+        Debug.LogWarning("[RecordButtonController] WebGL 빌드에서는 UnityEngine.Microphone을 사용할 수 없어 녹음을 건너뜁니다.");
+        return;
+#else
         if (_isRecording)
             StopRecording();
         else
             StartRecording();
+#endif
     }
 
     void StartRecording()
     {
+#if UNITY_WEBGL
+        Debug.LogWarning("[RecordButtonController] WebGL에서는 Microphone.Start를 호출하지 않습니다.");
+        return;
+#else
         if (!HasMicrophonePermission())
         {
             Debug.LogWarning("마이크 권한이 허용되지 않았습니다.");
@@ -59,12 +77,19 @@ public class RecordButtonController : MonoBehaviour
             ? Microphone.devices[0]
             : microphoneDevice;
 
-        _clip = Microphone.Start(_activeDevice, false, Mathf.CeilToInt(maxRecordingSeconds), sampleRate);
+        _clip = Microphone.Start(
+            _activeDevice,
+            false,
+            Mathf.CeilToInt(maxRecordingSeconds),
+            sampleRate
+        );
+
         _isRecording = true;
 
         Debug.Log($"녹음 시작: 장치={_activeDevice}, 최대={maxRecordingSeconds}s");
 
         _autoStopCoroutine = StartCoroutine(AutoStopAfterTimeout());
+#endif
     }
 
     IEnumerator AutoStopAfterTimeout()
@@ -79,6 +104,11 @@ public class RecordButtonController : MonoBehaviour
 
     void StopRecording()
     {
+#if UNITY_WEBGL
+        Debug.LogWarning("[RecordButtonController] WebGL에서는 Microphone.End를 호출하지 않습니다.");
+        _isRecording = false;
+        return;
+#else
         if (!_isRecording) return;
 
         if (_autoStopCoroutine != null)
@@ -88,9 +118,10 @@ public class RecordButtonController : MonoBehaviour
         }
 
         int position = Microphone.GetPosition(_activeDevice);
+
         if (!Microphone.IsRecording(_activeDevice) && position == 0)
         {
-            position = _clip.samples;
+            position = _clip != null ? _clip.samples : 0;
         }
 
         Microphone.End(_activeDevice);
@@ -98,9 +129,10 @@ public class RecordButtonController : MonoBehaviour
 
         if (_clip == null || position <= 0)
         {
-            if (_clip != null) Destroy(_clip); 
+            if (_clip != null) Destroy(_clip);
             return;
         }
+
         recordButton.interactable = false;
 
         AudioClip trimmedClip = TrimClip(_clip, position);
@@ -108,18 +140,22 @@ public class RecordButtonController : MonoBehaviour
 
         Destroy(_clip);
         Destroy(trimmedClip);
-        
+
         string base64Wav = System.Convert.ToBase64String(wavBytes);
         StartCoroutine(UploadWav(base64Wav));
+#endif
     }
 
     IEnumerator UploadWav(string base64Wav)
     {
         recordButton.interactable = true;
 
+        // TODO:
+        // 서버 업로드 로직이 필요하면 여기에 UnityWebRequest 등으로 구현
         yield break;
     }
 
+#if !UNITY_WEBGL
     AudioClip TrimClip(AudioClip source, int sampleCount)
     {
         float[] data = new float[sampleCount * source.channels];
@@ -130,7 +166,9 @@ public class RecordButtonController : MonoBehaviour
             sampleCount,
             source.channels,
             source.frequency,
-            false);
+            false
+        );
+
         trimmed.SetData(data, 0);
         return trimmed;
     }
@@ -141,6 +179,7 @@ public class RecordButtonController : MonoBehaviour
         clip.GetData(samples, 0);
 
         short[] pcm = new short[samples.Length];
+
         for (int i = 0; i < samples.Length; i++)
         {
             float clamped = Mathf.Clamp(samples[i], -1f, 1f);
@@ -170,23 +209,34 @@ public class RecordButtonController : MonoBehaviour
 
         bw.Write(System.Text.Encoding.ASCII.GetBytes("data"));
         bw.Write(pcmBytes);
+
         foreach (short s in pcm)
+        {
             bw.Write(s);
+        }
 
         return ms.ToArray();
     }
-    
+#endif
+
     protected virtual void OnUploadSuccess(string responseJson) { }
     protected virtual void OnUploadFailed(string error) { }
 
     void OnDestroy()
     {
-        if (_isRecording) Microphone.End(_activeDevice);
+#if !UNITY_WEBGL
+        if (_isRecording)
+        {
+            Microphone.End(_activeDevice);
+        }
+#endif
     }
 
     private bool HasMicrophonePermission()
     {
-#if UNITY_ANDROID
+#if UNITY_WEBGL
+        return false;
+#elif UNITY_ANDROID
         return Permission.HasUserAuthorizedPermission(Permission.Microphone);
 #elif UNITY_IOS
         return Application.HasUserAuthorization(UserAuthorization.Microphone);
@@ -197,14 +247,14 @@ public class RecordButtonController : MonoBehaviour
 
     private void RequestMicrophonePermission()
     {
-#if UNITY_ANDROID
-        // 안드로이드 권한 요청
+#if UNITY_WEBGL
+        Debug.LogWarning("[RecordButtonController] WebGL에서는 UnityEngine.Microphone 권한 요청을 건너뜁니다.");
+#elif UNITY_ANDROID
         if (!Permission.HasUserAuthorizedPermission(Permission.Microphone))
         {
             Permission.RequestUserPermission(Permission.Microphone);
         }
 #elif UNITY_IOS
-        // iOS 권한 요청
         if (!Application.HasUserAuthorization(UserAuthorization.Microphone))
         {
             Application.RequestUserAuthorization(UserAuthorization.Microphone);
