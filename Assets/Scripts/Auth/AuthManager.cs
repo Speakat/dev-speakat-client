@@ -39,15 +39,17 @@ public class AuthManager : MonoBehaviour
             isSuccess = true,
             data = new OAuthLoginData
             {
-                userId = "1",
+                userUuid = "mock-user-uuid",
                 email = "test@gmail.com",
                 nickname = "GoogleUser",
                 profileImageUrl = "https://example.com/profile.png",
-                provider = "GOOGLE",
+                provider = 0,
                 accessToken = "mock-access-token",
                 refreshToken = "mock-refresh-token",
                 isNewUser = true
-            }
+            },
+            code = null,
+            message = null
         };
 
         OnLoginSuccess(mockResponse);
@@ -85,28 +87,49 @@ public class AuthManager : MonoBehaviour
 
     private void OnLoginSuccess(OAuthLoginResponse response)
     {
-        if (response == null || response.data == null)
+        if (response == null)
         {
-            Debug.LogError("[AuthManager] Invalid login response.");
+            Debug.LogError("[AuthManager] Login response is null.");
             return;
         }
 
-        Debug.Log("[AuthManager] OnLoginSuccess called");
+        if (!response.isSuccess)
+        {
+            Debug.LogError($"[AuthManager] Login API failed: code={response.code}, message={response.message}");
+            return;
+        }
+
+        if (response.data == null)
+        {
+            Debug.LogError("[AuthManager] Login response data is null.");
+            return;
+        }
+
+        Debug.Log($"[AuthManager] OnLoginSuccess called. uuid={response.data.userUuid}, nickname={response.data.nickname}, isNewUser={response.data.isNewUser}");
+
+        if (TokenStore.Instance == null)
+        {
+            Debug.LogError("[AuthManager] TokenStore.Instance is null. Scene에 TokenStore 오브젝트가 있는지 확인 필요");
+            return;
+        }
+
         TokenStore.Instance.SetLoginData(response.data);
 
         if (response.data.isNewUser)
         {
-            Debug.Log("[AuthManager] newUser: input window open");
-            if (signupInfoPanel != null) signupInfoPanel.SetActive(true);
+            Debug.Log("[AuthManager] New user: signup info panel open");
+
+            if (signupInfoPanel != null)
+                signupInfoPanel.SetActive(true);
             else
             {
-                Debug.LogWarning("[AuthManager] signupInfoPanel이 연결되지 않았습니다.");
+                Debug.LogWarning("[AuthManager] signupInfoPanel is not assigned. Move to next scene.");
                 SceneManager.LoadScene(nextSceneName);
             }
         }
         else
         {
-            Debug.Log("[AuthManager] 기존 유저. move to next scene");
+            Debug.Log("[AuthManager] Existing user. Move to next scene.");
             SceneManager.LoadScene(nextSceneName);
         }
     }

@@ -4,8 +4,6 @@ using System.Runtime.InteropServices;
 
 public class WebViewOAuthService : MonoBehaviour
 {
-    //public event Action<string, string> OnAuthorizationCodeReceived;
-
     [Header("Google")]
     [SerializeField] private string googleClientId;
     [SerializeField] private string googleRedirectUri;
@@ -14,47 +12,54 @@ public class WebViewOAuthService : MonoBehaviour
     [SerializeField] private string kakaoRestApiKey;
     [SerializeField] private string kakaoRedirectUri;
 
-    #if UNITY_WEBGL && !UNITY_EDITOR
-        [DllImport("__Internal")]
-        private static extern void OpenOAuthPopup(string url);
-    #endif
+    [Header("WebGL")]
+    [SerializeField] private string webGLRedirectUri = "http://127.0.0.1:5500/callback.html";
+
+#if UNITY_WEBGL && !UNITY_EDITOR
+    [DllImport("__Internal")]
+    private static extern void OpenOAuthPopup(string url);
+#endif
 
     public void StartLogin(string provider)
     {
         string authUrl = BuildAuthorizationUrl(provider);
+
+        if (string.IsNullOrEmpty(authUrl))
+        {
+            Debug.LogError($"[WebViewOAuthService] Unsupported provider or empty authUrl: {provider}");
+            return;
+        }
+
         Debug.Log($"[WebViewOAuthService] authUrl = {authUrl}");
 
-        //if (string.IsNullOrEmpty(authUrl))
-        //{
-        //    Debug.LogError($"[WebViewOAuthService] Unsupported provider: {provider}");
-        //    return;
-        //}
-
-        #if UNITY_WEBGL && !UNITY_EDITOR
-            Debug.Log("[WebViewOAuthService] WEBGL 환경 감지: JS 팝업을 시도");
-            OpenOAuthPopup(authUrl);
-        #else
-        Debug.Log("[WebViewOAuthService] 모바일 환경 감지: 시스템 브라우저 시도");
-            Application.OpenURL(authUrl);
-        #endif
-
-        //Debug.Log($"[WebViewOAuthService] Open auth url: {authUrl}");
-
-        //OpenWebView(authUrl);
-        //Application.OpenURL(authUrl);
+#if UNITY_WEBGL && !UNITY_EDITOR
+        Debug.Log("[WebViewOAuthService] WEBGL 환경 감지: JS 팝업을 시도");
+        OpenOAuthPopup(authUrl);
+#else
+        Debug.Log("[WebViewOAuthService] 모바일/에디터 환경 감지: 시스템 브라우저 시도");
+        Application.OpenURL(authUrl);
+#endif
     }
 
     private string BuildAuthorizationUrl(string provider)
     {
+        if (string.IsNullOrEmpty(provider))
+        {
+            Debug.LogError("[WebViewOAuthService] provider is null or empty");
+            return null;
+        }
+
         provider = provider.ToLower();
 
         string currentGoogleRedirectUri = googleRedirectUri;
         string currentKakaoRedirectUri = kakaoRedirectUri;
 
-        #if UNITY_WEBGL && !UNITY_EDITOR
-            currentGoogleRedirectUri = "http://127.0.0.1:5500/callback.html";
-            currentKakaoRedirectUri = "http://127.0.0.1:5500/callback.html";
-        #endif
+#if UNITY_WEBGL && !UNITY_EDITOR
+        currentGoogleRedirectUri = webGLRedirectUri;
+        currentKakaoRedirectUri = webGLRedirectUri;
+#endif
+
+        string encodedState = Uri.EscapeDataString(provider);
 
         if (provider == "google")
         {
@@ -62,7 +67,8 @@ public class WebViewOAuthService : MonoBehaviour
                 + "?client_id=" + Uri.EscapeDataString(googleClientId)
                 + "&redirect_uri=" + Uri.EscapeDataString(currentGoogleRedirectUri)
                 + "&response_type=code"
-                + "&scope=" + Uri.EscapeDataString("openid email profile");
+                + "&scope=" + Uri.EscapeDataString("openid email profile")
+                + "&state=" + encodedState;
         }
 
         if (provider == "kakao")
@@ -70,9 +76,11 @@ public class WebViewOAuthService : MonoBehaviour
             return "https://kauth.kakao.com/oauth/authorize"
                 + "?client_id=" + Uri.EscapeDataString(kakaoRestApiKey)
                 + "&redirect_uri=" + Uri.EscapeDataString(currentKakaoRedirectUri)
-                + "&response_type=code";
+                + "&response_type=code"
+                + "&state=" + encodedState;
         }
 
+        Debug.LogError($"[WebViewOAuthService] Unsupported provider: {provider}");
         return null;
     }
 }
