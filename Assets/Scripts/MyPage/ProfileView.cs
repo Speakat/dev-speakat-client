@@ -29,10 +29,18 @@ public class ProfileView : MonoBehaviour
         {
             yield return uwr.SendWebRequest();
 
-            if (uwr.result != UnityWebRequest.Result.Success)
+            if (uwr.result == UnityWebRequest.Result.Success)
             {
                 Texture2D texture = DownloadHandlerTexture.GetContent(uwr);
-                profilePic.sprite = Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), new Vector2(0.5f, 0.5f));
+                profilePic.sprite = Sprite.Create(
+                    texture,
+                    new Rect(0, 0, texture.width, texture.height),
+                    new Vector2(0.5f, 0.5f)
+                );
+            }
+            else
+            {
+                Debug.LogWarning($"[ProfileView] 프로필 이미지 로드 실패: {uwr.error}");
             }
         }
     }
