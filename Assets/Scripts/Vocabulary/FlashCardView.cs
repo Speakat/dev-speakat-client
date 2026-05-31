@@ -23,6 +23,16 @@ public class FlashCardView : MonoBehaviour, IPointerClickHandler, IPointerDownHa
     [SerializeField] private TMP_Text meaningText;
     [SerializeField] private Button soundButton;
 
+    [Header("Master UI")]
+    [SerializeField] private VocabularyApiService vocabularyApiService;
+    [SerializeField] private TMP_Text masterStatusText;
+    [SerializeField] private Button knownButton;      // O
+    [SerializeField] private Button unknownButton;    // X
+    [SerializeField] private TMP_Text knownButtonText;
+    [SerializeField] private TMP_Text unknownButtonText;
+
+    [SerializeField] private bool autoMoveNextAfterChoice = true;
+
     [Header("Swipe")]
     [SerializeField] private float swipeThreshold = 80f;
 
@@ -32,6 +42,25 @@ public class FlashCardView : MonoBehaviour, IPointerClickHandler, IPointerDownHa
 
     private Vector2 pointerDownPos;
     private bool didSwipe;
+
+    private bool isUpdatingMasterState;
+    private int feedbackIndex = -1;
+    private string feedbackMessage = null;
+
+    private void Awake()
+    {
+        if (knownButton != null)
+        {
+            knownButton.onClick.RemoveAllListeners();
+            knownButton.onClick.AddListener(() => OnClickMasterChoice(true));
+        }
+
+        if (unknownButton != null)
+        {
+            unknownButton.onClick.RemoveAllListeners();
+            unknownButton.onClick.AddListener(() => OnClickMasterChoice(false));
+        }
+    }
 
     public void Open(List<WordData> wordList, int startIndex = 0)
     {
@@ -77,6 +106,9 @@ public class FlashCardView : MonoBehaviour, IPointerClickHandler, IPointerDownHa
         isFront = true;
         didSwipe = true;
 
+        feedbackIndex = -1;
+        feedbackMessage = null;
+
         RefreshCard();
 
         Debug.Log($"[FlashCardView] 다음 단어: index={currentIndex}, word={words[currentIndex].word}");
@@ -89,6 +121,9 @@ public class FlashCardView : MonoBehaviour, IPointerClickHandler, IPointerDownHa
         currentIndex = (currentIndex - 1 + words.Count) % words.Count;
         isFront = true;
         didSwipe = true;
+
+        feedbackIndex = -1;
+        feedbackMessage = null;
 
         RefreshCard();
 
@@ -137,6 +172,118 @@ public class FlashCardView : MonoBehaviour, IPointerClickHandler, IPointerDownHa
                 Debug.Log($"[FlashCardView] {data.word} 발음 재생");
             });
         }
+
+        RefreshMasterChoiceUI(data);
+    }
+
+    private void RefreshMasterChoiceUI(WordData data)
+    {
+        Debug.Log($"[FlashCardView] RefreshMasterChoiceUI: index={currentIndex}, word={data.word}, isMastered={data.isMastered}");
+
+        if (data == null)
+            return;
+
+        if (masterStatusText != null)
+        {
+            if (feedbackIndex == currentIndex && !string.IsNullOrEmpty(feedbackMessage))
+            {
+                masterStatusText.text = feedbackMessage;
+            }
+            else
+            {
+                masterStatusText.text = data.isMastered
+                    ? "마스터한 단어예요!"
+                    : "이 단어를 알고 있나요?";
+            }
+        }
+
+        if (knownButtonText != null)
+            knownButtonText.text = data.isMastered ? "알고 있어요" : "잘 알아요!";
+
+        if (unknownButtonText != null)
+            unknownButtonText.text = data.isMastered ? "다시 복습할래요" : "아직 어려워요";
+
+        bool canInteract = !isUpdatingMasterState;
+
+        if (knownButton != null)
+            knownButton.interactable = canInteract;
+
+        if (unknownButton != null)
+            unknownButton.interactable = canInteract;
+    }
+
+    private async void OnClickMasterChoice(bool isMastered)
+    {
+        if (isUpdatingMasterState)
+            return;
+
+        if (words == null || words.Count == 0)
+            return;
+
+        WordData currentWord = words[currentIndex];
+
+        if (currentWord.flashcardId <= 0)
+        {
+            Debug.LogWarning("[FlashCardView] flashcardId가 없어 마스터 상태를 저장할 수 없습니다.");
+            return;
+        }
+
+        if (vocabularyApiService == null)
+        {
+            Debug.LogError("[FlashCardView] vocabularyApiService가 연결되지 않았습니다.");
+            return;
+        }
+
+        isUpdatingMasterState = true;
+        SetMasterButtonsInteractable(false);
+
+        try
+        {
+            bool savedIsMastered = await vocabularyApiService.SetMasteredAsync(
+                currentWord.flashcardId,
+                isMastered
+            );
+
+            currentWord.isMastered = savedIsMastered;
+
+            Debug.Log(
+                $"[FlashCardView] 마스터 상태 저장 성공: " +
+                $"flashcardId={currentWord.flashcardId}, word={currentWord.word}, isMastered={savedIsMastered}"
+            );
+
+            feedbackIndex = currentIndex;
+            feedbackMessage = savedIsMastered
+                ? "마스터한 단어예요!"
+                : "다음에 다시 복습해요!";
+
+            RefreshMasterChoiceUI(currentWord);
+
+            if (autoMoveNextAfterChoice && words.Count > 1)
+            {
+                await System.Threading.Tasks.Task.Delay(350);
+                ShowNext();
+            }
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError($"[FlashCardView] 마스터 상태 저장 실패:\n{e}");
+        }
+        finally
+        {
+            isUpdatingMasterState = false;
+
+            if (words != null && words.Count > 0)
+                RefreshMasterChoiceUI(words[currentIndex]);
+        }
+    }
+
+    private void SetMasterButtonsInteractable(bool interactable)
+    {
+        if (knownButton != null)
+            knownButton.interactable = interactable;
+
+        if (unknownButton != null)
+            unknownButton.interactable = interactable;
     }
 
     public void OnPointerDown(PointerEventData eventData)
@@ -182,6 +329,17 @@ public class FlashCardView : MonoBehaviour, IPointerClickHandler, IPointerDownHa
 
     public void OnPointerClick(PointerEventData eventData)
     {
+        if (eventData.pointerPress != null)
+        {
+            Button pressedButton = eventData.pointerPress.GetComponentInParent<Button>();
+
+            if (pressedButton == knownButton || pressedButton == unknownButton || pressedButton == soundButton)
+            {
+                Debug.Log("[FlashCardView] 조작 버튼 클릭이므로 카드 뒤집기 무시");
+                return;
+            }
+        }
+
         if (didSwipe)
         {
             Debug.Log("[FlashCardView] 스와이프 직후 클릭 무시");

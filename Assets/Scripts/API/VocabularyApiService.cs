@@ -129,8 +129,7 @@ public class VocabularyApiService : MonoBehaviour
     {
         if (apiProvider == null)
         {
-            Debug.LogError("[VocabularyApiService] apiProvider가 연결되지 않았습니다.");
-            return false;
+            throw new Exception("[VocabularyApiService] apiProvider가 연결되지 않았습니다.");
         }
 
         var body = new PatchFlashcardRequestDto
@@ -140,10 +139,14 @@ public class VocabularyApiService : MonoBehaviour
 
         var response = await apiProvider.Client.FlashcardsPATCHAsync(flashcardId, body);
 
-        if (response == null || response.IsSuccess != true || response.Data == null)
+        if (response == null)
         {
-            Debug.LogError($"[VocabularyApiService] SetMastered failed: {response?.Message}");
-            return false;
+            throw new Exception("[VocabularyApiService] SetMastered response is null");
+        }
+
+        if (response.IsSuccess != true || response.Data == null)
+        {
+            throw new Exception($"[VocabularyApiService] SetMastered failed: code={response.Code}, message={response.Message}");
         }
 
         return response.Data.IsMastered.GetValueOrDefault();
