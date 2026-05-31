@@ -15,12 +15,26 @@ public class ProfileView : MonoBehaviour
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     public void Setup(string nickname, string course, string url)
     {
-        nicknameText.text = $"{nickname} ´Ô";
+        // nicknameText.text = $"{nickname} ´Ô";
+        nicknameText.text = FormatNickname(nickname);
         //levelText.text = $"Lv.{data.level}";
         courseText.text = course;
         //expProgressBar.value = data.expProgress;
         
         if (!string.IsNullOrEmpty(url)) StartCoroutine(LoadProfileImage(url));
+    }
+
+    private string FormatNickname(string nickname)
+    {
+        if (string.IsNullOrWhiteSpace(nickname))
+            return "ÇÐ½ÀÀÚ ´Ô";
+
+        string displayName = nickname.Trim();
+
+        if (displayName.Length > 12)
+            displayName = displayName.Substring(0, 12) + "...";
+
+        return $"{displayName} ´Ô";
     }
 
     IEnumerator LoadProfileImage(string url)

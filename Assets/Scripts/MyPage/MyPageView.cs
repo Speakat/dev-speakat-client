@@ -19,6 +19,10 @@ public class MyStatsData
     public int? semanticScore;
     public int? grammarScore;
     public int? naturalnessScore;
+
+    public double? avgSemanticScore;
+    public double? avgGrammarScore;
+    public double? avgNaturalnessScore;
 }
 
 [System.Serializable]
@@ -158,9 +162,9 @@ public class MyPageView : MonoBehaviour
 
                 currentStreak = streak.CurrentStreak.GetValueOrDefault(),
 
-                scoreMeaning = stats.semanticScore.GetValueOrDefault(),
-                scoreGrammar = stats.grammarScore.GetValueOrDefault(),
-                scoreNaturalness = stats.naturalnessScore.GetValueOrDefault(),
+                scoreMeaning = GetScore(stats.semanticScore, stats.avgSemanticScore),
+                scoreGrammar = GetScore(stats.grammarScore, stats.avgGrammarScore),
+                scoreNaturalness = GetScore(stats.naturalnessScore, stats.avgNaturalnessScore),
 
                 currentMonth = currentDisplayMonth,
                 startDayOffset = GetStartDayOffset(currentDisplayYear, currentDisplayMonth),
@@ -290,6 +294,17 @@ public class MyPageView : MonoBehaviour
         }
 
         return result;
+    }
+
+    private int GetScore(int? directScore, double? averageScore)
+    {
+        if (directScore.HasValue)
+            return directScore.Value;
+
+        if (averageScore.HasValue)
+            return Mathf.RoundToInt((float)averageScore.Value);
+
+        return 0;
     }
 
     public void UpdateUI(MyPageData data)
