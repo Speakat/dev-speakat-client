@@ -1,9 +1,11 @@
-﻿using UnityEngine;
-using UnityEngine.UI;
-using TMPro;
-using System.Collections.Generic;
-using UnityEngine.Pool;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
+using TMPro;
+using UnityEngine;
+using UnityEngine.EventSystems;
+using UnityEngine.Pool;
+using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 public class VocabularyView : MonoBehaviour
 {
@@ -31,6 +33,12 @@ public class VocabularyView : MonoBehaviour
     [SerializeField] private VocabularyApiService vocabularyApiService;
     [SerializeField] private bool useDummyOnApiFail = true;
 
+    [Header("Navigation")]
+    [SerializeField] private Button backButton;
+    [SerializeField] private Button flashCardBackButton;
+    [SerializeField] private GameObject flashCardPanel;
+    [SerializeField] private string previousSceneName = "Lobby";
+
     private IObjectPool<GameObject> vocaCardPool;
     private List<GameObject> activeCards = new List<GameObject>();
 
@@ -39,6 +47,9 @@ public class VocabularyView : MonoBehaviour
     private VocabularyData currentData;
 
     private List<WordData> allWords = new List<WordData>();
+
+    private long? selectedQuestId = null;
+    private List<QuestFilterData> cachedQuestFilters = new List<QuestFilterData>();
 
     void Awake()
     {
@@ -78,10 +89,50 @@ public class VocabularyView : MonoBehaviour
         if (vocabTabIcon != null)
             vocabTabIcon.color = new Color32(255, 138, 61, 255);
 
-        // 서버 연동 시 API 호출로 대체
-        //LoadDummyData();
+        BindNavigationEvents();
 
         await LoadApiData();
+    }
+    private void BindNavigationEvents()
+    {
+        if (backButton != null)
+        {
+            backButton.onClick.RemoveAllListeners();
+            backButton.onClick.AddListener(OnClickBack);
+            //Debug.Log("[VocabularyView] Main BackButton 연결 완료");
+        }
+        else
+        {
+            Debug.LogWarning("[VocabularyView] Main BackButton이 연결되지 않았습니다.");
+        }
+
+        if (flashCardBackButton != null)
+        {
+            flashCardBackButton.onClick.RemoveAllListeners();
+            flashCardBackButton.onClick.AddListener(OnClickBack);
+            //Debug.Log("[VocabularyView] FlashCard BackButton 연결 완료");
+        }
+        else
+        {
+            Debug.LogWarning("[VocabularyView] FlashCard BackButton이 연결되지 않았습니다.");
+        }
+    }
+
+    public void OnClickBack()
+    {
+        bool isFlashCardOpen = flashCardPanel != null && flashCardPanel.activeSelf;
+
+        if (isFlashCardOpen)
+        {
+            if (flashCardView != null)
+                flashCardView.Close();
+            else
+                Debug.LogWarning("[VocabularyView] flashCardView가 연결되지 않았습니다.");
+
+            return;
+        }
+
+        SceneManager.LoadScene(previousSceneName);
     }
 
     private void LoadDummyData()
@@ -89,7 +140,12 @@ public class VocabularyView : MonoBehaviour
         // 서버에서 왔다고 가정하는 가짜 데이터
         VocabularyData dummyData = new VocabularyData
         {
-            questFilters = new List<string> { "전체", "즐겨찾기", "방금", "마트 가기", "카페 가기", "공항 가기", "체크인 하기" },
+            questFilterDataList = new List<QuestFilterData>
+            {
+                new QuestFilterData("전체", null),
+                new QuestFilterData("마트 가기", 1),
+                new QuestFilterData("카페 가기", 2)
+            },
             wordList = new List<WordData>
             {
                 new WordData { word = "market", pronunciation = "/ˈmɑːrkɪt/", meaning = "1. 시장, 가게\n2. 판매하다, 마케팅하다, 내놓다", questName = "Quest 1" },
@@ -110,44 +166,16 @@ public class VocabularyView : MonoBehaviour
             }
         };
 
+        currentData = dummyData;
+        cachedQuestFilters = dummyData.questFilterDataList;
         UpdateUI(dummyData);
+        RefreshFilterTabs();
     }
 
     public void UpdateUI(VocabularyData data)
     {
         currentData = data;
         allWords = data.wordList != null ? new List<WordData>(data.wordList) : new List<WordData>();
-
-        // 1. 필터 탭 동적 생성 (나중에 풀링으로)
-        foreach (Transform child in filterTabContent) Destroy(child.gameObject); // 기존 탭 초기화
-        activeTabs.Clear();
-
-        for (int i = 0; i < data.questFilters.Count; i++)
-        {
-            GameObject tabObj = Instantiate(filterTabPrefab, filterTabContent, false);
-
-            RectTransform tabRt = tabObj.GetComponent<RectTransform>();
-            tabRt.localScale = Vector3.one;
-            tabRt.localRotation = Quaternion.identity;
-            tabRt.anchoredPosition = Vector2.zero;
-
-            FilterTab tabScript = tabObj.GetComponent<FilterTab>();
-
-            if (tabScript != null)
-            {
-                // 첫 번째 탭(i == 0)만 기본으로 선택되게(true) 세팅
-                bool isFirstTab = (i == 0);
-                tabScript.Setup(data.questFilters[i], isFirstTab, OnFilterTabClicked);
-
-                activeTabs.Add(tabScript);
-            }
-        }
-
-        //foreach (string filter in data.questFilters)
-        //{
-        //    GameObject tab = Instantiate(filterTabPrefab, filterTabContent);
-        //    tab.GetComponentInChildren<TMP_Text>().text = filter;
-        //}
 
         RebuildWordCards(data.wordList);
     }
@@ -185,23 +213,6 @@ public class VocabularyView : MonoBehaviour
         }
     }
 
-    private void OnFilterTabClicked(FilterTab clickedTab)
-    {
-        foreach (var tab in activeTabs)
-            tab.SetSelected(tab == clickedTab);
-
-        Debug.Log($"[{clickedTab.FilterName}] 필터 적용");
-
-        if (clickedTab.FilterName == "전체")
-        {
-            RebuildWordCards(allWords);
-            return;
-        }
-
-        List<WordData> filtered = allWords.FindAll(w => w.questName == clickedTab.FilterName);
-        RebuildWordCards(filtered);
-    }
-
     public void SetVocabTabActive(bool isActive)
     {
         if (vocabTabIcon != null)
@@ -230,7 +241,7 @@ public class VocabularyView : MonoBehaviour
         flashCardView.Open(currentData.wordList, 0);
     }
 
-    private async System.Threading.Tasks.Task LoadApiData()
+    private async System.Threading.Tasks.Task LoadApiData(long? questId = null)
     {
         if (vocabularyApiService == null)
         {
@@ -241,16 +252,117 @@ public class VocabularyView : MonoBehaviour
 
         try
         {
-            VocabularyData apiData = await vocabularyApiService.GetFlashcardsAsync(null, 20, null);
-            UpdateUI(apiData);
+            selectedQuestId = questId;
 
-            Debug.Log($"[VocabularyView] API 단어장 로드 성공: {apiData.wordList.Count}개");
+            VocabularyData data = await vocabularyApiService.GetFlashcardsAsync(
+                cursor: null,
+                size: 20,
+                questId: selectedQuestId
+            );
+
+            currentData = data;
+
+            // 전체 조회일 때만 필터 목록 캐싱
+            // 특정 questId로 재조회하면 응답이 해당 퀘스트만 오기 때문에 필터가 줄어드는 걸 방지
+            if (selectedQuestId == null && data.questFilterDataList != null)
+            {
+                cachedQuestFilters = data.questFilterDataList;
+            }
+
+            UpdateUI(data);
+
+            RefreshFilterTabs();
+
+            Debug.Log($"[VocabularyView] API 데이터 로드 성공: questId={selectedQuestId}");
         }
-        catch (System.Exception ex)
+        catch (System.Exception e)
         {
-            Debug.LogError(ex);
+            Debug.LogError($"[VocabularyView] API 데이터 로드 실패:\n{e}");
 
-            if (useDummyOnApiFail) LoadDummyData();
+            if (useDummyOnApiFail)
+                LoadDummyData();
         }
+    }
+
+    private void RefreshFilterTabs()
+    {
+        if (filterTabContent == null || filterTabPrefab == null)
+            return;
+
+        foreach (Transform child in filterTabContent)
+            Destroy(child.gameObject);
+
+        activeTabs.Clear();
+
+        List<QuestFilterData> filters = cachedQuestFilters;
+
+        if (filters == null || filters.Count == 0)
+        {
+            filters = new List<QuestFilterData>
+            {
+                new QuestFilterData("전체", null),
+                new QuestFilterData("마트 가기", 1),
+                new QuestFilterData("카페 가기", 2) // 더미에서는 필터 안 뜰 수 있어서 추가
+            };
+        }
+
+        foreach (QuestFilterData filter in filters)
+        {
+            GameObject tabObj = Instantiate(filterTabPrefab, filterTabContent, false);
+
+            RectTransform tabRt = tabObj.GetComponent<RectTransform>();
+            if (tabRt != null)
+            {
+                tabRt.localScale = Vector3.one;
+                tabRt.localRotation = Quaternion.identity;
+                tabRt.anchoredPosition = Vector2.zero;
+            }
+
+            FilterTab tabScript = tabObj.GetComponent<FilterTab>();
+
+            if (tabScript != null)
+            {
+                bool isSelected = selectedQuestId == filter.questId;
+
+                tabScript.Setup(filter.label, isSelected, clickedTab =>
+                {
+                    OnClickQuestFilter(filter.questId);
+                });
+
+                activeTabs.Add(tabScript);
+            }
+            else
+            {
+                Button button = tabObj.GetComponent<Button>();
+                TMP_Text text = tabObj.GetComponentInChildren<TMP_Text>();
+
+                if (text != null)
+                    text.text = filter.label;
+
+                if (button != null)
+                {
+                    long? questId = filter.questId;
+
+                    button.onClick.RemoveAllListeners();
+                    button.onClick.AddListener(() =>
+                    {
+                        OnClickQuestFilter(questId);
+                    });
+                }
+
+                Image image = tabObj.GetComponent<Image>();
+                if (image != null)
+                {
+                    bool isSelected = selectedQuestId == filter.questId;
+                    image.color = isSelected ? activeColor : inactiveColor;
+                }
+            }
+        }
+    }
+
+    private async void OnClickQuestFilter(long? questId)
+    {
+        Debug.Log($"[VocabularyView] 필터 클릭: questId={questId}");
+        await LoadApiData(questId);
     }
 }

@@ -69,19 +69,36 @@ public class VocabularyApiService : MonoBehaviour
             };
         }).ToList();
 
-        List<string> filters = new List<string> { "전체" };
+        List<QuestFilterData> questFilterDataList = new List<QuestFilterData>
+        {
+            new QuestFilterData("전체", null)
+        };
 
-        filters.AddRange(
+        questFilterDataList.AddRange(
             words
-                .Select(w => w.questName)
-                .Where(q => !string.IsNullOrEmpty(q))
-                .Distinct()
+                .Where(w => w.questId > 0)
+                .GroupBy(w => w.questId)
+                .Select(g =>
+                {
+                    WordData first = g.First();
+                    string label = string.IsNullOrEmpty(first.questName)
+                        ? $"Quest {first.questId}"
+                        : first.questName;
+
+                    return new QuestFilterData(label, first.questId);
+                })
         );
+
+        List<string> filters = questFilterDataList
+            .Select(f => f.label)
+            .Distinct()
+            .ToList();
 
         return new VocabularyData
         {
             wordList = words,
             questFilters = filters,
+            questFilterDataList = questFilterDataList,
             nextCursor = listData.NextCursor,
             hasMore = listData.HasMore.GetValueOrDefault(),
             wordsToReviewCount = words.Count(w => !w.isMastered)

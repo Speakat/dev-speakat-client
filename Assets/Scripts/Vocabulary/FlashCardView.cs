@@ -1,8 +1,10 @@
+using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
+using UnityEngine.Networking;
 
 public class FlashCardView : MonoBehaviour, IPointerClickHandler, IPointerDownHandler, IPointerUpHandler
 {
@@ -36,6 +38,9 @@ public class FlashCardView : MonoBehaviour, IPointerClickHandler, IPointerDownHa
     [Header("Swipe")]
     [SerializeField] private float swipeThreshold = 80f;
 
+    [Header("Audio")]
+    [SerializeField] private AudioSource audioSource;
+
     private List<WordData> words = new List<WordData>();
     private int currentIndex = 0;
     private bool isFront = true;
@@ -49,6 +54,12 @@ public class FlashCardView : MonoBehaviour, IPointerClickHandler, IPointerDownHa
 
     private void Awake()
     {
+        if (audioSource == null)
+            audioSource = GetComponent<AudioSource>();
+
+        if (audioSource == null)
+            audioSource = gameObject.AddComponent<AudioSource>();
+
         if (knownButton != null)
         {
             knownButton.onClick.RemoveAllListeners();
@@ -167,13 +178,102 @@ public class FlashCardView : MonoBehaviour, IPointerClickHandler, IPointerDownHa
         if (soundButton != null)
         {
             soundButton.onClick.RemoveAllListeners();
-            soundButton.onClick.AddListener(() =>
-            {
-                Debug.Log($"[FlashCardView] {data.word} 발음 재생");
-            });
+            soundButton.onClick.AddListener(OnClickSoundButton);
         }
 
         RefreshMasterChoiceUI(data);
+    }
+
+    private async void OnClickSoundButton()
+    {
+        if (words == null || words.Count == 0)
+            return;
+
+        WordData currentWord = words[currentIndex];
+
+        if (currentWord.flashcardId <= 0)
+        {
+            Debug.LogWarning("[FlashCardView] flashcardId가 없어 상세 조회를 할 수 없습니다.");
+            return;
+        }
+
+        if (vocabularyApiService == null)
+        {
+            Debug.LogError("[FlashCardView] vocabularyApiService가 연결되지 않았습니다.");
+            return;
+        }
+
+        if (soundButton != null)
+            soundButton.interactable = false;
+
+        try
+        {
+            Debug.Log($"[FlashCardView] 상세 조회 시작: flashcardId={currentWord.flashcardId}");
+
+            WordData detail = await vocabularyApiService.GetFlashcardDetailAsync(currentWord.flashcardId);
+
+            if (detail == null)
+            {
+                Debug.LogWarning("[FlashCardView] 상세 조회 결과가 null입니다.");
+                return;
+            }
+
+            // 상세 응답으로 현재 데이터 갱신
+            currentWord.word = detail.word;
+            currentWord.meaning = detail.meaning;
+            currentWord.pronunciation = detail.pronunciation;
+            currentWord.audioUrl = detail.audioUrl;
+            currentWord.isMastered = detail.isMastered;
+
+            RefreshCard();
+
+            if (string.IsNullOrWhiteSpace(currentWord.audioUrl))
+            {
+                Debug.LogWarning($"[FlashCardView] audioUrl이 없습니다: {currentWord.word}");
+                return;
+            }
+
+            StartCoroutine(PlayAudioFromUrl(currentWord.audioUrl));
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError($"[FlashCardView] 상세 조회 또는 오디오 재생 실패:\n{e}");
+        }
+        finally
+        {
+            if (soundButton != null)
+                soundButton.interactable = true;
+        }
+    }
+
+    private IEnumerator PlayAudioFromUrl(string audioUrl)
+    {
+        using (UnityWebRequest request = UnityWebRequestMultimedia.GetAudioClip(audioUrl, AudioType.MPEG))
+        {
+            yield return request.SendWebRequest();
+
+            if (request.result != UnityWebRequest.Result.Success)
+            {
+                Debug.LogWarning($"[FlashCardView] 오디오 로드 실패: {request.error}");
+                yield break;
+            }
+
+            AudioClip clip = DownloadHandlerAudioClip.GetContent(request);
+
+            if (clip == null)
+            {
+                Debug.LogWarning("[FlashCardView] AudioClip이 null입니다.");
+                yield break;
+            }
+
+            if (audioSource == null)
+                audioSource = gameObject.AddComponent<AudioSource>();
+
+            audioSource.clip = clip;
+            audioSource.Play();
+
+            Debug.Log("[FlashCardView] 오디오 재생 시작");
+        }
     }
 
     private void RefreshMasterChoiceUI(WordData data)

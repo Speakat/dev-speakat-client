@@ -547,8 +547,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 0}
+  m_AnchoredPosition: {x: 15.3433, y: 0}
+  m_SizeDelta: {x: -638.8384, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &137249786
 MonoBehaviour:
@@ -732,9 +732,9 @@ RectTransform:
   - {fileID: 2039389919}
   - {fileID: 1648140059}
   - {fileID: 962865801}
-  - {fileID: 123128835}
   - {fileID: 699881366}
   - {fileID: 1658668013}
+  - {fileID: 123128835}
   m_Father: {fileID: 1630835723}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -954,52 +954,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 328129468}
   m_CullTransparentMesh: 1
---- !u!1 &391409587
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 391409589}
-  - component: {fileID: 391409588}
-  m_Layer: 0
-  m_Name: RawApiTest
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 0
---- !u!114 &391409588
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 391409587}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 23e9b61939713844aa8f4682d6c518fe, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::DebugFlashcardsRawTester
-  baseUrl: https://speakat.hyorim.shop
-  debugAccessToken: 
---- !u!4 &391409589
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 391409587}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 556.30524, y: 958.2753, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &394081931
 GameObject:
   m_ObjectHideFlags: 0
@@ -2073,7 +2027,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
   m_Color: {r: 1, g: 1, b: 1, a: 0}
-  m_RaycastTarget: 1
+  m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
@@ -2587,6 +2541,7 @@ MonoBehaviour:
   unknownButtonText: {fileID: 1289275070}
   autoMoveNextAfterChoice: 1
   swipeThreshold: 80
+  audioSource: {fileID: 0}
 --- !u!1 &1010648922
 GameObject:
   m_ObjectHideFlags: 0
@@ -3601,8 +3556,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 0}
+  m_AnchoredPosition: {x: 15.3433, y: 0}
+  m_SizeDelta: {x: -638.8384, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1365552035
 MonoBehaviour:
@@ -3762,6 +3717,10 @@ MonoBehaviour:
   flashCardView: {fileID: 962865805}
   vocabularyApiService: {fileID: 1196122055}
   useDummyOnApiFail: 1
+  backButton: {fileID: 2070010996}
+  flashCardBackButton: {fileID: 2090316601}
+  flashCardPanel: {fileID: 264820229}
+  previousSceneName: Lobby
 --- !u!1 &1404726388
 GameObject:
   m_ObjectHideFlags: 0
@@ -3813,7 +3772,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
   m_Color: {r: 0.9607843, g: 0.9607843, b: 0.9607843, a: 1}
-  m_RaycastTarget: 1
+  m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
@@ -4056,8 +4015,8 @@ RectTransform:
   m_Children:
   - {fileID: 2099904209}
   - {fileID: 1404726389}
-  - {fileID: 661708384}
   - {fileID: 1465134381}
+  - {fileID: 661708384}
   - {fileID: 264820230}
   - {fileID: 417040695}
   - {fileID: 1366927174}
@@ -4975,19 +4934,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 2070010997}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 2070010995}
-        m_TargetAssemblyTypeName: SceneNavigator, Assembly-CSharp
-        m_MethodName: LoadLobbyScene
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
+      m_Calls: []
 --- !u!114 &2070010997
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5041,7 +4988,7 @@ GameObject:
   - component: {fileID: 2090316600}
   - component: {fileID: 2090316604}
   m_Layer: 5
-  m_Name: BackButton
+  m_Name: FlashBackButton
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -5073,7 +5020,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2090316598}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: c636cd7b92c2bbe4997f66835c5c235d, type: 3}
   m_Name: 
@@ -5167,12 +5114,13 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2090316598}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: fccbc6b2a4372894c949365b9862a5db, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::FlashCardBackButton
   flashCardView: {fileID: 962865805}
+  button: {fileID: 0}
 --- !u!1 &2099904208
 GameObject:
   m_ObjectHideFlags: 0
@@ -5224,7 +5172,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
   m_Color: {r: 0.9607843, g: 0.9607843, b: 0.9607843, a: 1}
-  m_RaycastTarget: 1
+  m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
@@ -5518,4 +5466,3 @@ SceneRoots:
   - {fileID: 1630835723}
   - {fileID: 1010648925}
   - {fileID: 1196122057}
-  - {fileID: 391409589}
