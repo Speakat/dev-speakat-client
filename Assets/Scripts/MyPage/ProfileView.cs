@@ -8,20 +8,31 @@ public class ProfileView : MonoBehaviour
 {
     [SerializeField] private Image profilePic;
     [SerializeField] private TMP_Text nicknameText;
-    //[SerializeField] private TMP_Text levelText;
     [SerializeField] private TMP_Text courseText;
-    //[SerializeField] private Slider expProgressBar;
 
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
+    [Header("Profile Image")]
+    [SerializeField] private Sprite defaultProfileSprite;
+
+    private Coroutine profileImageCoroutine;
+
     public void Setup(string nickname, string course, string url)
     {
-        // nicknameText.text = $"{nickname} 님";
-        nicknameText.text = FormatNickname(nickname);
-        //levelText.text = $"Lv.{data.level}";
-        courseText.text = course;
-        //expProgressBar.value = data.expProgress;
-        
-        if (!string.IsNullOrEmpty(url)) StartCoroutine(LoadProfileImage(url));
+        if (nicknameText != null)
+            nicknameText.text = FormatNickname(nickname);
+
+        if (courseText != null)
+            courseText.text = course;
+
+        SetDefaultProfileImage();
+
+        if (profileImageCoroutine != null)
+        {
+            StopCoroutine(profileImageCoroutine);
+            profileImageCoroutine = null;
+        }
+
+        if (!string.IsNullOrWhiteSpace(url))
+            profileImageCoroutine = StartCoroutine(LoadProfileImage(url));
     }
 
     private string FormatNickname(string nickname)
@@ -37,25 +48,45 @@ public class ProfileView : MonoBehaviour
         return $"{displayName} 님";
     }
 
-    IEnumerator LoadProfileImage(string url)
+    private void SetDefaultProfileImage()
+    {
+        if (profilePic == null)
+            return;
+
+        if (defaultProfileSprite != null)
+            profilePic.sprite = defaultProfileSprite;
+    }
+
+    private IEnumerator LoadProfileImage(string url)
     {
         using (UnityWebRequest uwr = UnityWebRequestTexture.GetTexture(url))
         {
             yield return uwr.SendWebRequest();
 
-            if (uwr.result == UnityWebRequest.Result.Success)
-            {
-                Texture2D texture = DownloadHandlerTexture.GetContent(uwr);
-                profilePic.sprite = Sprite.Create(
-                    texture,
-                    new Rect(0, 0, texture.width, texture.height),
-                    new Vector2(0.5f, 0.5f)
-                );
-            }
-            else
+            if (uwr.result != UnityWebRequest.Result.Success)
             {
                 Debug.LogWarning($"[ProfileView] 프로필 이미지 로드 실패: {uwr.error}");
+                SetDefaultProfileImage();
+                yield break;
             }
+
+            Texture2D texture = DownloadHandlerTexture.GetContent(uwr);
+
+            if (texture == null)
+            {
+                Debug.LogWarning("[ProfileView] 프로필 이미지 texture가 null입니다.");
+                SetDefaultProfileImage();
+                yield break;
+            }
+
+            Sprite sprite = Sprite.Create(
+                texture,
+                new Rect(0, 0, texture.width, texture.height),
+                new Vector2(0.5f, 0.5f)
+            );
+
+            if (profilePic != null)
+                profilePic.sprite = sprite;
         }
     }
 }
