@@ -14,8 +14,11 @@ public class RecordButtonController : MonoBehaviour
 
     private void FinishRecording()
     {
-        OnRecordingCompleted?.Invoke(_clip); 
+        OnRecordingCompleted?.Invoke(_clip);
     }
+
+    public Sprite defaultSprite;
+    public Sprite recordingSprite;
 
     public Button recordButton;
     private float maxRecordingSeconds = 5f;
@@ -32,11 +35,10 @@ public class RecordButtonController : MonoBehaviour
 
     private Image _buttonImage;
 
-    void Start()
+    void Awake()
     {
         _buttonImage = recordButton.GetComponent<Image>();
         recordButton.onClick.AddListener(OnRecordButtonClicked);
-
         RequestMicrophonePermission();
     }
 
@@ -51,7 +53,14 @@ public class RecordButtonController : MonoBehaviour
     public void SetRecordActive()
     {
         recordButton.interactable = true;
-        _buttonImage.color = Color.white; 
+        _buttonImage.color = Color.white;
+        _buttonImage.sprite = defaultSprite;
+    }
+
+    public void SetRecordInactive()
+    {
+        recordButton.interactable = false;
+        _buttonImage.sprite = defaultSprite;
     }
 
     void StartRecording()
@@ -68,6 +77,8 @@ public class RecordButtonController : MonoBehaviour
             Debug.LogError("연결된 마이크가 없습니다.");
             return;
         }
+
+        _buttonImage.sprite = recordingSprite;
 
         _activeDevice = string.IsNullOrEmpty(microphoneDevice)
             ? Microphone.devices[0]
@@ -95,6 +106,8 @@ public class RecordButtonController : MonoBehaviour
     {
         if (!_isRecording) return;
 
+        _buttonImage.sprite = defaultSprite;
+
         if (_autoStopCoroutine != null)
         {
             StopCoroutine(_autoStopCoroutine);
@@ -112,7 +125,7 @@ public class RecordButtonController : MonoBehaviour
 
         if (_clip == null || position <= 0)
         {
-            if (_clip != null) Destroy(_clip); 
+            if (_clip != null) Destroy(_clip);
             return;
         }
         recordButton.interactable = false;
@@ -122,14 +135,15 @@ public class RecordButtonController : MonoBehaviour
 
         Destroy(_clip);
         Destroy(trimmedClip);
-        
+
         string base64Wav = System.Convert.ToBase64String(wavBytes);
         StartCoroutine(UploadWav(base64Wav));
     }
 
     IEnumerator UploadWav(string base64Wav)
     {
-        FinishRecording();
+        // base64를 GamePlayManager로 넘겨서 API 호출
+        GamePlayManager.Instance.HandleRecordingCompletedWithBase64(base64Wav);
 
         recordButton.interactable = true;
 
@@ -191,7 +205,7 @@ public class RecordButtonController : MonoBehaviour
 
         return ms.ToArray();
     }
-    
+
     protected virtual void OnUploadSuccess(string responseJson) { }
     protected virtual void OnUploadFailed(string error) { }
 
