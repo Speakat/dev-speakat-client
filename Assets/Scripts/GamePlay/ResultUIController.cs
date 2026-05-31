@@ -79,9 +79,9 @@ public class ResultUIController : MonoBehaviour
 
     public void SetScore(float context, float grammar, float expression)
     {
-        contextRelevanceScoreText.text = $"{context * 100}%";
-        grammarAccuracyScoreText.text = $"{grammar * 100}%";
-        expressionQualityScoreText.text = $"{expression * 100}%";
+        contextRelevanceScoreText.text = $"{context * 100:F0}%";
+        grammarAccuracyScoreText.text = $"{grammar * 100:F0}%";
+        expressionQualityScoreText.text = $"{expression * 100:F0}%";
 
         totalScore = (context + grammar + expression) / 3f;
         scoreText.text = $"{totalScore * 100:F0}%";

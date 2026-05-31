@@ -1,5 +1,7 @@
+using System.Collections;
 using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class DialoguePanelUIController : MonoBehaviour
 {
@@ -7,36 +9,48 @@ public class DialoguePanelUIController : MonoBehaviour
     private GameObject questionPanel;
     [SerializeField]
     private GameObject answerPanel;
+    private RectTransform dialoguePanel;
 
     [SerializeField] private TextMeshProUGUI questionText;
     [SerializeField] private float maxWidth = 300f;
     [SerializeField] private float horizontalPadding = 50f; // 좌우 패딩 합산
 
     private RectTransform questionPanelRect;
-    
+
+    private void Awake()
+    {
+        dialoguePanel = GetComponent<RectTransform>();
+
+        ClearPanels();
+    }
+
     public void SetQuestionPanel(string question)
     {
         questionPanel.SetActive(true);
         questionPanel.GetComponentInChildren<TextMeshProUGUI>().text = question;
 
-        //Resize();
+        StartCoroutine(SetDialoguePanelRefresh());
     }
 
     public void SetAnswerPanel(string answers)
     {
         answerPanel.SetActive(true);
         answerPanel.GetComponentInChildren<TextMeshProUGUI>().text = answers;
+
+        StartCoroutine(SetDialoguePanelRefresh());
+    }
+
+    IEnumerator SetDialoguePanelRefresh()
+    {
+        yield return null;
+
+        LayoutRebuilder.ForceRebuildLayoutImmediate(dialoguePanel);
     }
 
     public void ClearPanels()
     {
         questionPanel.SetActive(false);
         answerPanel.SetActive(false);
-    }
-
-    private void Awake()
-    {
-        ClearPanels();
     }
 
     // public void Resize()
