@@ -3,6 +3,7 @@ using UnityEngine.UI;
 using TMPro;
 using System.Collections.Generic;
 using UnityEngine.Pool;
+using System.Threading.Tasks;
 
 public class VocabularyView : MonoBehaviour
 {
@@ -27,12 +28,17 @@ public class VocabularyView : MonoBehaviour
 
     [SerializeField] private FlashCardView flashCardView;
 
+    [SerializeField] private VocabularyApiService vocabularyApiService;
+    [SerializeField] private bool useDummyOnApiFail = true;
+
     private IObjectPool<GameObject> vocaCardPool;
     private List<GameObject> activeCards = new List<GameObject>();
 
     private List<FilterTab> activeTabs = new List<FilterTab>();
 
     private VocabularyData currentData;
+
+    private List<WordData> allWords = new List<WordData>();
 
     void Awake()
     {
@@ -67,12 +73,15 @@ public class VocabularyView : MonoBehaviour
         );
     }
 
-    void Start()
+    private async void Start()
     {
-        if (vocabTabIcon != null) vocabTabIcon.color = new Color32(255, 138, 61, 255);
+        if (vocabTabIcon != null)
+            vocabTabIcon.color = new Color32(255, 138, 61, 255);
 
         // 서버 연동 시 API 호출로 대체
-        LoadDummyData();
+        //LoadDummyData();
+
+        await LoadApiData();
     }
 
     private void LoadDummyData()
@@ -107,6 +116,7 @@ public class VocabularyView : MonoBehaviour
     public void UpdateUI(VocabularyData data)
     {
         currentData = data;
+        allWords = data.wordList != null ? new List<WordData>(data.wordList) : new List<WordData>();
 
         // 1. 필터 탭 동적 생성 (나중에 풀링으로)
         foreach (Transform child in filterTabContent) Destroy(child.gameObject); // 기존 탭 초기화
@@ -139,11 +149,18 @@ public class VocabularyView : MonoBehaviour
         //    tab.GetComponentInChildren<TMP_Text>().text = filter;
         //}
 
-        // 2. 단어 카드 생성 (오브젝트 풀링 사용)
-        foreach (var card in activeCards) vocaCardPool.Release(card);
+        RebuildWordCards(data.wordList);
+    }
+
+    // 단어 카드 생성
+    private void RebuildWordCards(List<WordData> words)
+    {
+        foreach (var card in activeCards)
+            vocaCardPool.Release(card);
+
         activeCards.Clear();
 
-        foreach (WordData wordData in data.wordList)
+        foreach (WordData wordData in words)
         {
             GameObject cardObj = vocaCardPool.Get();
             cardObj.transform.SetAsLastSibling();
@@ -154,28 +171,13 @@ public class VocabularyView : MonoBehaviour
             rt.anchoredPosition = Vector2.zero;
 
             VocaCard cardScript = cardObj.GetComponent<VocaCard>();
-            if (cardScript != null) cardScript.Setup(wordData);
-
-            Debug.Log(
-                $"[VocaCard 생성 확인] " +
-                $"name={cardObj.name}, " +
-                $"activeSelf={cardObj.activeSelf}, " +
-                $"activeInHierarchy={cardObj.activeInHierarchy}, " +
-                $"parent={cardObj.transform.parent.name}, " +
-                $"pos={rt.anchoredPosition}, " +
-                $"rectSize={rt.rect.size}, " +
-                $"scale={rt.localScale}"
-            );
+            if (cardScript != null)
+                cardScript.Setup(wordData);
 
             activeCards.Add(cardObj);
         }
 
         Canvas.ForceUpdateCanvases();
-
-        if (filterTabContent is RectTransform filterRect)
-        {
-            LayoutRebuilder.ForceRebuildLayoutImmediate(filterRect);
-        }
 
         if (wordListContent is RectTransform wordRect)
         {
@@ -185,9 +187,19 @@ public class VocabularyView : MonoBehaviour
 
     private void OnFilterTabClicked(FilterTab clickedTab)
     {
-        foreach (var tab in activeTabs) tab.SetSelected(tab == clickedTab);
+        foreach (var tab in activeTabs)
+            tab.SetSelected(tab == clickedTab);
 
         Debug.Log($"[{clickedTab.FilterName}] 필터 적용");
+
+        if (clickedTab.FilterName == "전체")
+        {
+            RebuildWordCards(allWords);
+            return;
+        }
+
+        List<WordData> filtered = allWords.FindAll(w => w.questName == clickedTab.FilterName);
+        RebuildWordCards(filtered);
     }
 
     public void SetVocabTabActive(bool isActive)
@@ -216,5 +228,29 @@ public class VocabularyView : MonoBehaviour
         }
 
         flashCardView.Open(currentData.wordList, 0);
+    }
+
+    private async System.Threading.Tasks.Task LoadApiData()
+    {
+        if (vocabularyApiService == null)
+        {
+            Debug.LogWarning("[VocabularyView] vocabularyApiService 연결 안됨. 더미데이터 사용");
+            LoadDummyData();
+            return;
+        }
+
+        try
+        {
+            VocabularyData apiData = await vocabularyApiService.GetFlashcardsAsync(null, 20, null);
+            UpdateUI(apiData);
+
+            Debug.Log($"[VocabularyView] API 단어장 로드 성공: {apiData.wordList.Count}개");
+        }
+        catch (System.Exception ex)
+        {
+            Debug.LogError(ex);
+
+            if (useDummyOnApiFail) LoadDummyData();
+        }
     }
 }

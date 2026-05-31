@@ -831,6 +831,52 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 328129468}
   m_CullTransparentMesh: 1
+--- !u!1 &391409587
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 391409589}
+  - component: {fileID: 391409588}
+  m_Layer: 0
+  m_Name: RawApiTest
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &391409588
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 391409587}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 23e9b61939713844aa8f4682d6c518fe, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DebugFlashcardsRawTester
+  baseUrl: https://speakat.hyorim.shop
+  debugAccessToken: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI0N2EzN2Q4ZS1hYTQ5LTRlMzItOGRmMC04NzJmZDE5N2U0NzAiLCJpYXQiOjE3NDg1NjMyMDAsImV4cCI6OTk5OTk5OTk5OX0.OVBxI96G65YqG221phZKUF3Pb7G8DO9ODewmzIPX1cc
+--- !u!4 &391409589
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 391409587}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 556.30524, y: 958.2753, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &394081931
 GameObject:
   m_ObjectHideFlags: 0
@@ -2446,6 +2492,66 @@ MonoBehaviour:
   m_FlexibleWidth: -1
   m_FlexibleHeight: 0
   m_LayoutPriority: 1
+--- !u!1 &1196122054
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1196122057}
+  - component: {fileID: 1196122056}
+  - component: {fileID: 1196122055}
+  m_Layer: 0
+  m_Name: ApiSystem
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1196122055
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1196122054}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe6f869c61095544eb4429787eaeb9d7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::VocabularyApiService
+  apiProvider: {fileID: 1196122056}
+--- !u!114 &1196122056
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1196122054}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ae8d48dfafb017d42b59e30bba4be283, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SpeakatApiProvider
+  baseUrl: https://speakat.hyorim.shop/
+  debugAccessToken: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI0N2EzN2Q4ZS1hYTQ5LTRlMzItOGRmMC04NzJmZDE5N2U0NzAiLCJpYXQiOjE3NDg1NjMyMDAsImV4cCI6OTk5OTk5OTk5OX0.OVBxI96G65YqG221phZKUF3Pb7G8DO9ODewmzIPX1cc
+--- !u!4 &1196122057
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1196122054}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 483.3704, y: 912.9906, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1222765451
 GameObject:
   m_ObjectHideFlags: 0
@@ -2992,6 +3098,8 @@ MonoBehaviour:
   filterTabPrefab: {fileID: 3411556834069472748, guid: 1bfe5da9d10811746b912b2a1327f08a, type: 3}
   vocaCardPrefab: {fileID: 9190015483585420805, guid: 902ed0b0cebe14441af3826cc51f71ca, type: 3}
   flashCardView: {fileID: 962865805}
+  vocabularyApiService: {fileID: 1196122055}
+  useDummyOnApiFail: 1
 --- !u!1 &1404726388
 GameObject:
   m_ObjectHideFlags: 0
@@ -4710,3 +4818,5 @@ SceneRoots:
   - {fileID: 2138870828}
   - {fileID: 1630835723}
   - {fileID: 1010648925}
+  - {fileID: 1196122057}
+  - {fileID: 391409589}

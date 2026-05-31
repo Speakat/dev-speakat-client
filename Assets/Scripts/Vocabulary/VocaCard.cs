@@ -9,8 +9,12 @@ public class VocaCard : MonoBehaviour
     [SerializeField] private TMP_Text questNameText;
     [SerializeField] private Button soundBtn;
 
+    private WordData currentData;
+
     public void Setup(WordData data)
     {
+        currentData = data;
+
         wordText.text = data.word;
         meaningText.text = data.meaning;
         questNameText.text = data.questName;
@@ -18,7 +22,7 @@ public class VocaCard : MonoBehaviour
         soundBtn.onClick.RemoveAllListeners();
         soundBtn.onClick.AddListener(() =>
         {
-            Debug.Log($"{data.word} 발음 듣기 재생~!");
+            Debug.Log($"{data.word} 발음 듣기 재생~! audioUrl={data.audioUrl}");
         });
     }
 }
