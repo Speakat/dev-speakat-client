@@ -1,3 +1,4 @@
+using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -11,14 +12,13 @@ public class ExitPopupUIController : MonoBehaviour
 
     private void Awake()
     {
-        exitButton.onClick.AddListener(OnExitButtonClicked);
+        exitButton.onClick.AddListener(() => _ = OnExitButtonClicked());
         cancelButton.onClick.AddListener(OnCancelButtonClicked);
     }
 
-    private void OnExitButtonClicked()
+    private async Task OnExitButtonClicked()
     {
-        // TODO : 세션 종료 api 호출
-
+        await GamePlayManager.Instance.EndSessionAsync();
         SceneManager.LoadScene("QuestScene");
     }
 
