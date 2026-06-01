@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: 6f201a72f81b2bf45bd1c55253a1be3f
+guid: 0c254f05b3806fe4fa3f422e4cf50ae3
 ModelImporter:
   serializedVersion: 21300
   internalIDToNameTable: []
@@ -115,5 +115,5 @@ AssetOrigin:
   productId: 366624
   packageName: Interiors FREE - Cozy Cartoon Pack 2
   packageVersion: 1.0
-  assetPath: Assets/Models/Mnostva Art/FREE_Interiors_2/Meshes/Cafe_Plant_1.fbx
+  assetPath: Assets/Models/Mnostva Art/FREE_Interiors_2/Meshes/Cafe_Coffee_Cup_To_Go_1.fbx
   uploadId: 877848
