@@ -30,4 +30,12 @@ public class LogPanelUIController : MonoBehaviour
         GameObject logItem = Instantiate(logPrefab, logListPanel.transform);
         logItem.GetComponentInChildren<TMPro.TextMeshProUGUI>().text = text;
     }
+
+    public void ClearLogs()
+    {
+        foreach (Transform child in logListPanel.transform)
+        {
+            Destroy(child.gameObject);
+        }
+    }
 }

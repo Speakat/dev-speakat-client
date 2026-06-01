@@ -942,10 +942,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 17047a4e2c22b8a459b28df364b875bb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::FeedbackPopupUIController
+  saveButton: {fileID: 0}
   replayButton: {fileID: 0}
-  continueButton: {fileID: 0}
   feedbackText: {fileID: 0}
   wordText: {fileID: 6508762305807034183}
+  meanText: {fileID: 0}
 --- !u!1 &5420754003275930073
 GameObject:
   m_ObjectHideFlags: 0
@@ -1062,7 +1063,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: 150}
-  m_SizeDelta: {x: 850, y: 700}
+  m_SizeDelta: {x: 850, y: 800}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &2010597135151569948
 CanvasRenderer:
