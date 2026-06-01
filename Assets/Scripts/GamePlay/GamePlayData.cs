@@ -1,6 +1,38 @@
 using System.Collections.Generic;
 
 [System.Serializable]
+public class SessionRequestWrapper
+{
+    public SessionRequest request;
+}
+
+[System.Serializable]
+public class SessionRequest
+{
+    public int quest_id;
+}
+
+[System.Serializable]
+public class SpeechRequest
+{
+    public int quest_id;
+    public int turn;
+    public string audio;
+}
+
+[System.Serializable]
+public class SessionStartBodyWrapper
+{
+    public SessionStartBody request;
+}
+
+[System.Serializable]
+public class SessionStartBody
+{
+    public int quest_id;
+}
+
+[System.Serializable]
 public class SessionResponse
 {
     public bool isSuccess;
@@ -24,6 +56,7 @@ public class TurnResponse
 [System.Serializable]
 public class TurnData
 {
+    public string userText;
     public string npcDialogue;
     public string npcDialogueAudio;
     public bool isTurnPassed;

@@ -1,14 +1,14 @@
+using System.Threading.Tasks;
 using UnityEngine;
+using UnityEngine.Networking;
 
 public class StageManager : MonoBehaviour
 {
     [SerializeField]
     private StageScrollUIController stageScrollUIController;
 
-    public static StageManager Instance { get; private set; }
-
-    private StageData stageListData;
-    public StageData StageListData => stageListData;
+    private const string BaseUrl = "http://speakat.hyorim.shop";
+    private const string StageListEndpoint = "/stages";
 
     private string stageListDummyData = @"
     {
@@ -45,29 +45,48 @@ public class StageManager : MonoBehaviour
         ]
       }
     }";
-
-    private void Awake()
+    async void Start()
     {
-        if (Instance == null)
+        await RefreshStageList();
+    }
+
+    public async Task RefreshStageList()
+    {
+        await LoadStageListAsync();
+    }
+
+    private async Task LoadStageListAsync()
+    {
+        try
         {
-            Instance = this;
-            DontDestroyOnLoad(gameObject);
+            string json = await GetAsync(BaseUrl + StageListEndpoint);
+            //Debug.Log($"[StageManager] 응답 raw: {json}");
+            StageData stageListData = JsonUtility.FromJson<StageData>(json);
+            SceneContext.SetStageListData(stageListData.data);
+            stageScrollUIController.SetStageScrollUI(stageListData.data);
         }
-        else if (Instance != this)
+        catch (System.Exception e)
         {
-            Destroy(gameObject);
-            return;
+            Debug.LogError($"[StageManager] 스테이지 목록 로드 실패: {e.Message}");
         }
     }
 
-    void Start()
+    private async Task<string> GetAsync(string url)
     {
-        stageListData = JsonUtility.FromJson<StageData>(stageListDummyData);
-        stageScrollUIController.SetStageScrollUI(stageListData.data);
-    }
+        string token = TokenStore.Instance.AccessToken.Trim();
 
-    public int GetStageCount()
-    {
-        return stageListData.data.items.Count;
+        using UnityWebRequest req = UnityWebRequest.Get(url);
+        req.SetRequestHeader("Authorization", $"Bearer {token}");
+        req.SetRequestHeader("Content-Type", "application/json");
+
+        await req.SendWebRequest();
+
+        if (req.result == UnityWebRequest.Result.Success)
+        {
+            //Debug.Log($"[StageManager] GET {url} 성공: {req.downloadHandler.text}");
+            return req.downloadHandler.text;
+        }
+
+        throw new System.Exception($"[{req.responseCode}] {req.error} — {req.downloadHandler.text}");
     }
 }
