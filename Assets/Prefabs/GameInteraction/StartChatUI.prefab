@@ -147,7 +147,7 @@ GameObject:
   m_Component:
   - component: {fileID: 4005184525016570080}
   m_Layer: 5
-  m_Name: GamePlayUI
+  m_Name: StartChatUI
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

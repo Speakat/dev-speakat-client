@@ -12,15 +12,28 @@ public class InteractableNpc : MonoBehaviour
     [SerializeField] private GameCameraController cameraController;
     [SerializeField] private GameObject guideObject;
     [SerializeField] private PlayerFadeController playerFadeController;
+    [SerializeField] private GamePlayManager gamePlayManager;
+    [SerializeField] private Collider npcCollider;
+    [SerializeField] private StageReactionController stageReactionController;
 
     [Header("Options")]
-    [SerializeField] private bool interactOnlyOnce = false;
+    [SerializeField] private bool interactOnlyOnce = true;
     [SerializeField] private float fadeDelay = 0.1f;
 
     private bool hasInteracted;
+    private bool isInteracting;
+
+    private void Awake()
+    {
+        if (npcCollider == null)
+            npcCollider = GetComponent<Collider>();
+    }
 
     private void OnMouseDown()
     {
+        if (isInteracting)
+            return;
+
         if (interactOnlyOnce && hasInteracted)
         {
             Debug.Log($"[InteractableNpc] 이미 상호작용한 NPC입니다: {npcId}");
@@ -33,11 +46,15 @@ public class InteractableNpc : MonoBehaviour
             return;
         }
 
+        isInteracting = true;
+
         Transform target = interactionPoint != null ? interactionPoint : transform;
 
         Debug.Log($"[InteractableNpc] NPC 클릭: {npcId}");
 
-        if (guideObject != null)
+        if (stageReactionController != null)
+            stageReactionController.OnInteractionStarted();
+        else if (guideObject != null)
             guideObject.SetActive(false);
 
         player.MoveTo(target.position, () =>
@@ -46,12 +63,23 @@ public class InteractableNpc : MonoBehaviour
 
             Debug.Log($"[InteractableNpc] NPC 도착 완료: {npcId}");
 
-            if (cameraController != null)
-                cameraController.MoveToTalkView();
+            if (npcCollider != null)
+                npcCollider.enabled = false;
 
-            StartCoroutine(FadePlayerAfterDelay(fadeDelay));
+            if (stageReactionController != null)
+            {
+                stageReactionController.OnTalkStarted();
+            }
+            else
+            {
+                if (cameraController != null)
+                    cameraController.MoveToTalkView();
 
-            Debug.Log("[InteractableNpc] 기존 GamePlayManager 대화 시작 함수 호출할 부분");
+                StartCoroutine(FadePlayerAfterDelay(fadeDelay));
+            }
+
+            if (gamePlayManager != null)
+                gamePlayManager.StartQuestSessionFromNpc();
         });
     }
 

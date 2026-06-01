@@ -120,6 +120,8 @@ public class RecordButtonController : MonoBehaviour
             position = _clip.samples;
         }
 
+        // Debug.Log($"[Record] 녹음 종료: position={position}, clipSamples={_clip?.samples}, channels={_clip?.channels}, frequency={_clip?.frequency}");
+
         Microphone.End(_activeDevice);
         _isRecording = false;
 
@@ -137,15 +139,28 @@ public class RecordButtonController : MonoBehaviour
         Destroy(trimmedClip);
 
         string base64Wav = System.Convert.ToBase64String(wavBytes);
+
+        Debug.Log($"[Record] WAV 변환 완료: bytes={wavBytes.Length}, base64Length={base64Wav.Length}");
+
         StartCoroutine(UploadWav(base64Wav));
     }
 
     IEnumerator UploadWav(string base64Wav)
     {
         // base64를 GamePlayManager로 넘겨서 API 호출
-        GamePlayManager.Instance.HandleRecordingCompletedWithBase64(base64Wav);
+        //GamePlayManager.Instance.HandleRecordingCompletedWithBase64(base64Wav);
 
-        yield break;
+        //yield break;
+
+        // Debug.Log($"[Record] GamePlayManager로 음성 전달: base64Length={base64Wav?.Length}");
+
+        if (GamePlayManager.Instance == null)
+        {
+            Debug.LogError("[Record] GamePlayManager.Instance가 없습니다.");
+            yield break;
+        }
+
+        GamePlayManager.Instance.HandleRecordingCompletedWithBase64(base64Wav);
     }
 
     AudioClip TrimClip(AudioClip source, int sampleCount)
