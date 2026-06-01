@@ -1,18 +1,28 @@
+using System.Threading.Tasks;
 using TMPro;
 using UnityEngine;
+using UnityEngine.Networking;
 
 public class QuestPanelUIController : MonoBehaviour
 {
-  [SerializeField]
-  private TextMeshProUGUI stageNameText; // 스테이지 이름 텍스트
+    [SerializeField]
+    private TextMeshProUGUI stageNameText;
 
-  [SerializeField]
-  private QuestButtonController[] questButtons;
+    [SerializeField]
+    private QuestButtonController[] questButtons;
 
-  private StageDetailResponse stageDetailResponse;
+    private StageDetailResponse stageDetailResponse;
 
-  // 더미데이터
-  private string stageDetailDummyData = @"
+    public GameObject questPanel;
+    public GameObject loadingPanel;
+
+    public int StageId { get; set; }
+
+
+    private const string BaseUrl = "http://speakat.hyorim.shop";
+    private const string StageDetailEndpoint = "/stages/";
+
+    private string stageDetailDummyData = @"
 {
   ""isSuccess"": true,
   ""data"": {
@@ -51,35 +61,77 @@ public class QuestPanelUIController : MonoBehaviour
     ]
   }
 }";
-  public void SetStageName(string stageName)
-  {
-    stageNameText.text = stageName;
-  }
 
-  // TODO: API 연동 시 더미 파싱을 FetchStageDetail(stageId) 호출로 교체
-  //       슬라이드 전환 시 인접 스테이지 선호출 + 캐싱 구조 함께 적용 예정
-  public void SetQuestPanel(int stageId = 1)
-  {
-    stageDetailResponse = JsonUtility.FromJson<StageDetailResponse>(stageDetailDummyData);
-
-    SetStageName(stageDetailResponse.data.title);
-
-    for (int i = 0; i < questButtons.Length; i++)
+    private void Awake()
     {
-      if (i < stageDetailResponse.data.quests.Count)
-      {
-        QuestItem quest = stageDetailResponse.data.quests[i];
-
-        // 데이터가 있으면 버튼 활성화
-        questButtons[i].gameObject.SetActive(true);
-
-        // 버튼 컨트롤러에 데이터 전달
-        questButtons[i].SetQuestButton(quest.questId, quest.status);
-      }
-      else
-      {
-        questButtons[i].gameObject.SetActive(false);
-      }
+        loadingPanel.SetActive(true);
+        questPanel.SetActive(false);
     }
-  }
+
+    public void SetStageName(string stageName)
+    {
+        stageNameText.text = stageName;
+    }
+
+    public void SetQuestPanel()
+    {
+        _ = SetQuestPanelAsync();
+    }
+
+    public async Task SetQuestPanelAsync()
+    {
+        try
+        {
+            string url = BaseUrl + StageDetailEndpoint + StageId;
+            //Debug.Log($"[QuestPanelUIController] 요청 URL: {url}");
+            string json = await GetAsync(url);
+            //Debug.Log($"[QuestPanelUIController] 응답 raw: {json}");
+            stageDetailResponse = JsonUtility.FromJson<StageDetailResponse>(json);
+            ApplyStageDetail(stageDetailResponse);
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError($"[QuestPanelUIController] 스테이지 상세 로드 실패 (stageId={StageId}): {e.Message}");
+        }
+    }
+
+    private void ApplyStageDetail(StageDetailResponse response)
+    {   
+        loadingPanel.SetActive(false);
+        questPanel.SetActive(true);
+        SetStageName(response.data.title);
+
+        int completedQuestCount = SceneContext.GetCompletedQuestCount(StageId);
+
+        for (int i = 0; i < questButtons.Length; i++)
+        {
+            if (i < response.data.quests.Count)
+            {
+                Debug.Log(response.data.quests[i].title + " - " + response.data.quests[i].isCompleted);
+                QuestItem quest = response.data.quests[i];
+                questButtons[i].gameObject.SetActive(true);
+                questButtons[i].SetQuestButton(quest.questId, quest.isCompleted);
+            }
+            else
+            {
+                questButtons[i].gameObject.SetActive(false);
+            }
+        }
+    }
+
+    private async Task<string> GetAsync(string url)
+    {
+        string token = TokenStore.Instance.AccessToken.Trim();
+
+        using UnityWebRequest req = UnityWebRequest.Get(url);
+        req.SetRequestHeader("Authorization", $"Bearer {token}");
+        req.SetRequestHeader("Content-Type", "application/json");
+
+        await req.SendWebRequest();
+
+        if (req.result == UnityWebRequest.Result.Success)
+            return req.downloadHandler.text;
+
+        throw new System.Exception($"[{req.responseCode}] {req.error} — {req.downloadHandler.text}");
+    }
 }
