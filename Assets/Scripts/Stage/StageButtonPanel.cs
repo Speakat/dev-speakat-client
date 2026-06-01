@@ -48,11 +48,11 @@ public class StageButtonPanel : MonoBehaviour
         {
             buttonImage.sprite = completeImage;
         }
-        else if (status == "IN_PROGRESS")
+        else if (status == "Unlocked")
         {
             buttonImage.sprite = progressImage;
         }
-        else if (status == "LOCKED")
+        else if (status == "Locked")
         {
             buttonImage.sprite = lockedImage;
             buttonComponent.interactable = false; // 잠긴 스테이지는 클릭 불가능
