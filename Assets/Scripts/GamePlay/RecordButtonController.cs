@@ -52,6 +52,7 @@ public class RecordButtonController : MonoBehaviour
 
     public void SetRecordActive()
     {
+        //Debug.Log("녹음 버튼 활성화");
         recordButton.interactable = true;
         _buttonImage.color = Color.white;
         _buttonImage.sprite = defaultSprite;
@@ -59,6 +60,7 @@ public class RecordButtonController : MonoBehaviour
 
     public void SetRecordInactive()
     {
+        //Debug.Log("녹음 버튼 비활성화");
         recordButton.interactable = false;
         _buttonImage.sprite = defaultSprite;
     }
@@ -106,8 +108,6 @@ public class RecordButtonController : MonoBehaviour
     {
         if (!_isRecording) return;
 
-        _buttonImage.sprite = defaultSprite;
-
         if (_autoStopCoroutine != null)
         {
             StopCoroutine(_autoStopCoroutine);
@@ -128,7 +128,7 @@ public class RecordButtonController : MonoBehaviour
             if (_clip != null) Destroy(_clip);
             return;
         }
-        recordButton.interactable = false;
+        SetRecordInactive();
 
         AudioClip trimmedClip = TrimClip(_clip, position);
         byte[] wavBytes = AudioClipToWav(trimmedClip);
@@ -144,8 +144,6 @@ public class RecordButtonController : MonoBehaviour
     {
         // base64를 GamePlayManager로 넘겨서 API 호출
         GamePlayManager.Instance.HandleRecordingCompletedWithBase64(base64Wav);
-
-        recordButton.interactable = true;
 
         yield break;
     }
