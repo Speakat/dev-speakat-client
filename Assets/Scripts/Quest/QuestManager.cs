@@ -21,8 +21,9 @@ public class QuestManager : MonoBehaviour
         }
     }
 
-    public void ShowQuestPopup()
+    public void ShowQuestPopup(int questId)
     {
         questPopup.SetActive(true);
+        questPopup.GetComponent<QuestPopupUIController>().SetQuestPopup(questId);
     }
 }
