@@ -368,6 +368,20 @@ public class VocabularyModels : MonoBehaviour
         await LoadApiData(questId);
     }
 
+    private void SetAllSoundButtonsInteractable(bool interactable)
+    {
+        foreach (GameObject cardObj in activeCards)
+        {
+            if (cardObj == null)
+                continue;
+
+            VocaCard card = cardObj.GetComponent<VocaCard>();
+
+            if (card != null)
+                card.SetSoundButtonInteractable(interactable);
+        }
+    }
+
     private async void OnClickVocaCardSound(WordData word)
     {
         if (word == null)
@@ -395,6 +409,7 @@ public class VocabularyModels : MonoBehaviour
         }
 
         isPlayingWordAudio = true;
+        SetAllSoundButtonsInteractable(false);
 
         try
         {
@@ -408,6 +423,7 @@ public class VocabularyModels : MonoBehaviour
                 {
                     Debug.LogWarning("[VocabularyView] 상세 조회 결과가 null입니다.");
                     isPlayingWordAudio = false;
+                    SetAllSoundButtonsInteractable(true);
                     return;
                 }
 
@@ -424,18 +440,22 @@ public class VocabularyModels : MonoBehaviour
             {
                 Debug.LogWarning($"[VocabularyView] audioUrl이 없습니다: {word.word}");
                 isPlayingWordAudio = false;
+                SetAllSoundButtonsInteractable(true);
                 return;
             }
 
             StartCoroutine(PlayAudioFromUrl(word.audioUrl, () =>
             {
                 isPlayingWordAudio = false;
+                SetAllSoundButtonsInteractable(true);
+
             }));
         }
         catch (System.Exception e)
         {
             Debug.LogError($"[VocabularyView] 발음 재생 실패:\n{e}");
             isPlayingWordAudio = false;
+            SetAllSoundButtonsInteractable(true);
         }
     }
 

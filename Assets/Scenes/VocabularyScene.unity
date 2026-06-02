@@ -850,7 +850,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SpeakatApiProvider
   baseUrl: https://speakat.hyorim.shop/
-  debugAccessToken: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI0N2EzN2Q4ZS1hYTQ5LTRlMzItOGRmMC04NzJmZDE5N2U0NzAiLCJpYXQiOjE3NDg1NjMyMDAsImV4cCI6OTk5OTk5OTk5OX0.OVBxI96G65YqG221phZKUF3Pb7G8DO9ODewmzIPX1cc
+  debugAccessToken: 
 --- !u!4 &1196122057
 Transform:
   m_ObjectHideFlags: 0
@@ -1108,6 +1108,7 @@ MonoBehaviour:
   flashCardBackButton: {fileID: 2090316601}
   flashCardPanel: {fileID: 264820229}
   previousSceneName: Lobby
+  audioSource: {fileID: 0}
 --- !u!1 &1465134380
 GameObject:
   m_ObjectHideFlags: 0
