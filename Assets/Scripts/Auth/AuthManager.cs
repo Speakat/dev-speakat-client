@@ -15,6 +15,8 @@ public class AuthManager : MonoBehaviour
     [SerializeField] private string nextSceneName = "Stage";
     [SerializeField] private GameObject signupInfoPanel; //newUser¿ë ÆË¾÷ ÆÐ³Î
 
+    [SerializeField] private SignupViewController signupViewController;
+
     private void OnEnable()
     {
         if (linkHandler != null)
@@ -120,17 +122,26 @@ public class AuthManager : MonoBehaviour
             Debug.Log("[AuthManager] New user: signup info panel open");
 
             if (signupInfoPanel != null)
+            {
                 signupInfoPanel.SetActive(true);
+
+                if (signupViewController != null)
+                {
+                    signupViewController.SetupSocialProfile(
+                        response.data.nickname,
+                        response.data.profileImageUrl
+                    );
+                }
+                else
+                {
+                    Debug.LogWarning("[AuthManager] signupViewController is not assigned.");
+                }
+            }
             else
             {
                 Debug.LogWarning("[AuthManager] signupInfoPanel is not assigned. Move to next scene.");
                 SceneManager.LoadScene(nextSceneName);
             }
-        }
-        else
-        {
-            Debug.Log("[AuthManager] Existing user. Move to next scene.");
-            SceneManager.LoadScene(nextSceneName);
         }
     }
 

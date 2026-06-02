@@ -1,13 +1,23 @@
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.Networking;
 using TMPro;
+using System.Collections;
 
 public class SignupViewController : MonoBehaviour
 {
+    [Header("Profile Preview")]
+    [SerializeField] private Image profileImage;
+    [SerializeField] private TMP_Text profileStatusText;
+
+    private string socialProfileImageUrl;
+
     [SerializeField] private TMP_InputField nicknameInput;
     [SerializeField] private TMP_Text errorText;
     [SerializeField] private Button submitButton;
     [SerializeField] private AuthApi authApi;
+
+    [SerializeField] private SignupViewController signupViewController;
 
     private bool isSubmitting;
 
@@ -151,5 +161,65 @@ public class SignupViewController : MonoBehaviour
             aliveAuthManager.GoToNextScene();
         else
             Debug.LogError("[Signup] AuthManager를 찾을 수 없음");
+    }
+
+    public void SetupSocialProfile(string nickname, string profileImageUrl)
+    {
+        if (nicknameInput != null && !string.IsNullOrWhiteSpace(nickname))
+            nicknameInput.text = nickname;
+
+        socialProfileImageUrl = profileImageUrl;
+
+        Debug.Log($"[SignupView] social profileImageUrl={profileImageUrl}");
+
+        if (!string.IsNullOrWhiteSpace(profileImageUrl))
+        {
+            if (profileStatusText != null)
+                profileStatusText.text = "프로필 이미지를 불러오는 중...";
+
+            StartCoroutine(LoadProfileImage(profileImageUrl));
+        }
+        else
+        {
+            if (profileStatusText != null)
+                profileStatusText.text = "프로필 이미지 없음";
+        }
+    }
+
+    private IEnumerator LoadProfileImage(string url)
+    {
+        using UnityWebRequest req = UnityWebRequestTexture.GetTexture(url);
+        yield return req.SendWebRequest();
+
+        if (req.result != UnityWebRequest.Result.Success)
+        {
+            Debug.LogError($"[SignupView] 프로필 이미지 로드 실패: {req.responseCode} / {req.error}");
+
+            if (profileStatusText != null)
+                profileStatusText.text = "이미지 로드 실패";
+
+            yield break;
+        }
+
+        Texture2D texture = DownloadHandlerTexture.GetContent(req);
+
+        if (profileImage == null)
+        {
+            Debug.LogError("[SignupView] Profile Image가 연결되지 않았습니다.");
+            yield break;
+        }
+
+        profileImage.sprite = Sprite.Create(
+            texture,
+            new Rect(0, 0, texture.width, texture.height),
+            new Vector2(0.5f, 0.5f)
+        );
+
+        profileImage.preserveAspect = true;
+
+        if (profileStatusText != null)
+            profileStatusText.text = "";
+
+        Debug.Log("[SignupView] 프로필 이미지 로드 성공");
     }
 }

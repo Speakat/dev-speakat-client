@@ -167,8 +167,28 @@ public class AuthApi : MonoBehaviour
             req.uploadHandler = new UploadHandlerRaw(bodyRaw);
             req.downloadHandler = new DownloadHandlerBuffer();
 
-            req.SetRequestHeader("Content-Type", "application/json; charset=utf-8");
+            req.SetRequestHeader("Content-Type", "application/json");
             req.SetRequestHeader("Accept", "application/json");
+
+            string accessToken = tokenStore != null ? tokenStore.AccessToken : null;
+
+#if UNITY_EDITOR
+if (string.IsNullOrWhiteSpace(accessToken))
+{
+    accessToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI0N2EzN2Q4ZS1hYTQ5LTRlMzItOGRmMC04NzJmZDE5N2U0NzAiLCJpYXQiOjE3NDg1NjMyMDAsImV4cCI6OTk5OTk5OTk5OX0.OVBxI96G65YqG221phZKUF3Pb7G8DO9ODewmzIPX1cc";
+    Debug.LogWarning("[AuthApi] 임시 debug token 사용 중. 커밋 전 반드시 제거.");
+}
+#endif
+
+            if (!string.IsNullOrWhiteSpace(accessToken))
+            {
+                req.SetRequestHeader("Authorization", $"Bearer {accessToken}");
+                Debug.Log("[AuthApi] CheckNickname Authorization header attached.");
+            }
+            else
+            {
+                Debug.LogWarning("[AuthApi] accessToken이 없어 POST /auth/check-nickname 요청에 Authorization을 붙이지 못했습니다.");
+            }
 
             yield return req.SendWebRequest();
 

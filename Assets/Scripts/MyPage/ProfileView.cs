@@ -12,15 +12,17 @@ public class ProfileView : MonoBehaviour
     [SerializeField] private TMP_Text courseText;
     //[SerializeField] private Slider expProgressBar;
 
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
     public void Setup(string nickname, string course, string url)
     {
-        nicknameText.text = $"{nickname} 님";
+        if (nicknameText != null) nicknameText.text = $"{nickname} 님";
         //levelText.text = $"Lv.{data.level}";
-        courseText.text = course;
+        if (courseText != null) courseText.text = course;
         //expProgressBar.value = data.expProgress;
-        
-        if (!string.IsNullOrEmpty(url)) StartCoroutine(LoadProfileImage(url));
+
+        Debug.Log($"[ProfileView] Setup nickname={nickname}, profileImageUrl={url}");
+
+        if (!string.IsNullOrEmpty(url))
+            StartCoroutine(LoadProfileImage(url));
     }
 
     IEnumerator LoadProfileImage(string url)
@@ -31,9 +33,21 @@ public class ProfileView : MonoBehaviour
 
             if (uwr.result != UnityWebRequest.Result.Success)
             {
-                Texture2D texture = DownloadHandlerTexture.GetContent(uwr);
-                profilePic.sprite = Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), new Vector2(0.5f, 0.5f));
+                Debug.LogError($"[ProfileView] 프로필 이미지 로드 실패: {uwr.responseCode} / {uwr.error}");
+                yield break;
             }
+
+            Texture2D texture = DownloadHandlerTexture.GetContent(uwr);
+
+            profilePic.sprite = Sprite.Create(
+                texture,
+                new Rect(0, 0, texture.width, texture.height),
+                new Vector2(0.5f, 0.5f)
+            );
+
+            profilePic.preserveAspect = true;
+
+            Debug.Log("[ProfileView] 프로필 이미지 로드 성공");
         }
     }
 }
