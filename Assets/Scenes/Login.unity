@@ -1038,10 +1038,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::WebViewOAuthService
   googleClientId: 358666565391-nbats8o0q0bamfstt5590bgjug3qgbp3.apps.googleusercontent.com
-  googleRedirectUri: http://127.0.0.1:5500/callback.html
+  googleRedirectUri: speakat://oauth/google
   kakaoRestApiKey: 65b40e5bbe648253ff7eacda948dc9fd
-  kakaoRedirectUri: http://127.0.0.1:5500/callback.html
-  webGLRedirectUri: http://127.0.0.1:5500/callback.html
+  kakaoRedirectUri: speakat://oauth/kakao
+  webGLRedirectUri: https://speakatweb.hyorim.shop/callback.html
 --- !u!114 &411056538
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -22,26 +22,65 @@ public class OAuthLinkHandler : MonoBehaviour
 
     private void HandleDeepLink(string url)
     {
-        Debug.Log($"Deep link received: {url}");
+        Debug.Log($"[OAuthLinkHandler] Deep link received: {url}");
 
-        Uri uri = new Uri(url);
+        if (string.IsNullOrWhiteSpace(url))
+        {
+            Debug.LogWarning("[OAuthLinkHandler] Empty deep link url.");
+            return;
+        }
+
+        Uri uri;
+
+        try
+        {
+            uri = new Uri(url);
+        }
+        catch (Exception e)
+        {
+            Debug.LogError($"[OAuthLinkHandler] Invalid deep link url: {url}, error={e.Message}");
+            return;
+        }
+
+        string error = GetQueryParam(uri.Query, "error");
+
+        if (!string.IsNullOrEmpty(error))
+        {
+            Debug.LogError($"[OAuthLinkHandler] OAuth error from deep link: {error}");
+            return;
+        }
+
         string code = GetQueryParam(uri.Query, "code");
-
         string provider = ExtractProvider(uri);
+
+        Debug.Log($"[OAuthLinkHandler] provider={provider}, hasCode={!string.IsNullOrEmpty(code)}");
 
         if (!string.IsNullOrEmpty(provider) && !string.IsNullOrEmpty(code))
         {
             OnAuthorizationCodeReceived?.Invoke(provider, code);
         }
+        else
+        {
+            Debug.LogWarning($"[OAuthLinkHandler] provider/code missing. provider={provider}, codeEmpty={string.IsNullOrEmpty(code)}");
+        }
     }
 
     private string ExtractProvider(Uri uri)
     {
-        string full = uri.AbsoluteUri.ToLower();
+        string path = uri.AbsolutePath.Trim('/').ToLower();
 
-        if (full.Contains("/google") || full.Contains("google"))
+        if (path == "google")
             return "google";
-        if (full.Contains("/kakao") || full.Contains("kakao"))
+
+        if (path == "kakao")
+            return "kakao";
+
+        string host = uri.Host.ToLower();
+
+        if (host == "google")
+            return "google";
+
+        if (host == "kakao")
             return "kakao";
 
         return null;

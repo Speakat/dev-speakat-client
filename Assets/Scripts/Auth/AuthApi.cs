@@ -1,19 +1,92 @@
 using System;
 using System.Collections;
-using System.Text;
+using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Threading.Tasks;
 using UnityEngine;
-using UnityEngine.Networking;
+using Speakat.Client;
 
 public class AuthApi : MonoBehaviour
 {
     [SerializeField] private string baseUrl = "https://speakat.hyorim.shop";
     [SerializeField] private TokenStore tokenStore;
 
-    private string BuildUrl(string path)
+    private HttpClient httpClient;
+    private SpeakatClient client;
+
+    private void Awake()
     {
-        string root = baseUrl.TrimEnd('/');
-        string p = path.StartsWith("/") ? path : "/" + path;
-        return root + p;
+        httpClient = new HttpClient();
+
+        client = new SpeakatClient(httpClient)
+        {
+            BaseUrl = baseUrl.TrimEnd('/') + "/"
+        };
+    }
+
+    private void OnDestroy()
+    {
+        httpClient?.Dispose();
+        httpClient = null;
+        client = null;
+    }
+
+    private void SetAuthorizationHeader(string accessToken)
+    {
+        httpClient.DefaultRequestHeaders.Authorization = null;
+
+        if (!string.IsNullOrWhiteSpace(accessToken))
+        {
+            httpClient.DefaultRequestHeaders.Authorization =
+                new AuthenticationHeaderValue("Bearer", accessToken);
+        }
+    }
+
+    private IEnumerator WaitTask<T>(
+        Task<T> task,
+        Func<T, string> validate,
+        Action<T> onSuccess,
+        Action<string> onFail)
+    {
+        yield return new WaitUntil(() => task.IsCompleted);
+
+        if (task.IsCanceled)
+        {
+            onFail?.Invoke("Request canceled");
+            yield break;
+        }
+
+        if (task.IsFaulted)
+        {
+            string error = ToErrorMessage(task.Exception);
+            Debug.LogError($"[AuthApi] Request failed: {error}");
+            onFail?.Invoke(error);
+            yield break;
+        }
+
+        T result = task.Result;
+        string validationError = validate?.Invoke(result);
+
+        if (!string.IsNullOrWhiteSpace(validationError))
+        {
+            Debug.LogError($"[AuthApi] API failed: {validationError}");
+            onFail?.Invoke(validationError);
+            yield break;
+        }
+
+        onSuccess?.Invoke(result);
+    }
+
+    private string ToErrorMessage(Exception exception)
+    {
+        Exception root = exception?.GetBaseException();
+
+        if (root is ApiException apiException)
+        {
+            return $"HTTP {apiException.StatusCode}: {apiException.Message}\n{apiException.Response}";
+        }
+
+        return root != null ? root.Message : "Unknown error";
     }
 
     public IEnumerator LoginWithOAuth(
@@ -22,79 +95,30 @@ public class AuthApi : MonoBehaviour
         Action<OAuthLoginResponse> onSuccess,
         Action<string> onFail)
     {
-        string url = BuildUrl($"/auth/oauth/{provider}");
+        SetAuthorizationHeader(null);
 
-        OAuthLoginRequest requestBody = new OAuthLoginRequest
+        var request = new OAuthLoginRequestDto
         {
-            authorizationCode = authorizationCode
+            AuthorizationCode = authorizationCode
         };
 
-        string json = JsonUtility.ToJson(requestBody);
+        Debug.Log($"[AuthApi] POST {client.BaseUrl}auth/oauth/{provider}");
 
-        using UnityWebRequest req = new UnityWebRequest(url, "POST");
-        byte[] bodyRaw = Encoding.UTF8.GetBytes(json);
+        Task<ApiResponseOfOAuthLoginResponseDto> task =
+            client.OauthAsync(provider, request);
 
-        req.uploadHandler = new UploadHandlerRaw(bodyRaw);
-        req.downloadHandler = new DownloadHandlerBuffer();
-        req.SetRequestHeader("Content-Type", "application/json");
-        req.SetRequestHeader("Accept", "application/json");
-
-        Debug.Log($"[AuthApi] POST {url}");
-        Debug.Log($"[AuthApi] Body: {json}");
-
-        yield return req.SendWebRequest();
-
-        string responseText = req.downloadHandler != null ? req.downloadHandler.text : "";
-
-        Debug.Log($"[AuthApi] Status: {req.responseCode}");
-        Debug.Log($"[AuthApi] Response: {responseText}");
-
-        if (req.result != UnityWebRequest.Result.Success)
-        {
-            string error = $"HTTP {req.responseCode}: {req.error}\n{responseText}";
-            Debug.LogError($"[AuthApi] Login Error: {error}");
-            onFail?.Invoke(error);
-            yield break;
-        }
-
-        OAuthLoginResponse response = null;
-
-        try
-        {
-            response = JsonUtility.FromJson<OAuthLoginResponse>(responseText);
-        }
-        catch (Exception e)
-        {
-            string error = $"Login response parse failed: {e.Message}\n{responseText}";
-            Debug.LogError($"[AuthApi] {error}");
-            onFail?.Invoke(error);
-            yield break;
-        }
-
-        if (response == null)
-        {
-            onFail?.Invoke("[AuthApi] Login response is null");
-            yield break;
-        }
-
-        if (!response.isSuccess)
-        {
-            string message = string.IsNullOrEmpty(response.message)
-                ? "Login failed"
-                : response.message;
-
-            Debug.LogError($"[AuthApi] API Fail: code={response.code}, message={message}");
-            onFail?.Invoke(message);
-            yield break;
-        }
-
-        if (response.data == null)
-        {
-            onFail?.Invoke("[AuthApi] Login success but data is null");
-            yield break;
-        }
-
-        onSuccess?.Invoke(response);
+        yield return WaitTask(
+            task,
+            response => ValidateApiResponse(
+                response?.IsSuccess,
+                response?.Data,
+                response?.Code,
+                response?.Message,
+                "Login"
+            ),
+            response => onSuccess?.Invoke(ToLegacyOAuthLoginResponse(response)),
+            onFail
+        );
     }
 
     public IEnumerator RefreshToken(
@@ -102,206 +126,205 @@ public class AuthApi : MonoBehaviour
         Action<RefreshTokenResponse> onSuccess,
         Action<string> onFail)
     {
-        string url = BuildUrl("/auth/refresh");
+        SetAuthorizationHeader(null);
 
-        RefreshTokenRequest requestBody = new RefreshTokenRequest
+        var request = new RefreshTokenRequestDto
         {
-            refreshToken = refreshToken
+            RefreshToken = refreshToken
         };
 
-        string json = JsonUtility.ToJson(requestBody);
+        Debug.Log($"[AuthApi] POST {client.BaseUrl}auth/refresh");
 
-        using UnityWebRequest req = new UnityWebRequest(url, "POST");
-        byte[] bodyRaw = Encoding.UTF8.GetBytes(json);
+        Task<ApiResponseOfRefreshTokenResponseDto> task =
+            client.RefreshAsync(request);
 
-        req.uploadHandler = new UploadHandlerRaw(bodyRaw);
-        req.downloadHandler = new DownloadHandlerBuffer();
-        req.SetRequestHeader("Content-Type", "application/json");
-        req.SetRequestHeader("Accept", "application/json");
-
-        Debug.Log($"[AuthApi] POST {url}");
-        Debug.Log($"[AuthApi] Body: {json}");
-
-        yield return req.SendWebRequest();
-
-        string responseText = req.downloadHandler != null ? req.downloadHandler.text : "";
-
-        if (req.result != UnityWebRequest.Result.Success)
-        {
-            string error = $"HTTP {req.responseCode}: {req.error}\n{responseText}";
-            Debug.LogError($"[AuthApi] Refresh Error: {error}");
-            onFail?.Invoke(error);
-            yield break;
-        }
-
-        RefreshTokenResponse response = JsonUtility.FromJson<RefreshTokenResponse>(responseText);
-
-        if (response == null || !response.isSuccess || response.data == null)
-        {
-            string error = response != null ? response.message : "Refresh response is null";
-            Debug.LogError($"[AuthApi] Refresh API Fail: {error}");
-            onFail?.Invoke(error);
-            yield break;
-        }
-
-        onSuccess?.Invoke(response);
+        yield return WaitTask(
+            task,
+            response => ValidateApiResponse(
+                response?.IsSuccess,
+                response?.Data,
+                response?.Code,
+                response?.Message,
+                "Refresh"
+            ),
+            response => onSuccess?.Invoke(ToLegacyRefreshTokenResponse(response)),
+            onFail
+        );
     }
 
     public IEnumerator CheckNickname(
-    string nickname,
-    Action<CheckNicknameResponse> onSuccess,
-    Action<string> onFail)
+        string nickname,
+        Action<CheckNicknameResponse> onSuccess,
+        Action<string> onFail)
     {
-        string url = BuildUrl("/auth/check-nickname");
+        string accessToken = tokenStore != null ? tokenStore.AccessToken : null;
+        SetAuthorizationHeader(accessToken);
 
-        string safeNickname = nickname.Replace("\\", "\\\\").Replace("\"", "\\\"");
-        string json = $"{{\"nickname\":\"{safeNickname}\"}}";
-
-        Debug.Log($"[AuthApi] CheckNickname URL={url}");
-        Debug.Log($"[AuthApi] CheckNickname Body={json}");
-
-        using (UnityWebRequest req = new UnityWebRequest(url, "POST"))
+        if (string.IsNullOrWhiteSpace(accessToken))
         {
-            byte[] bodyRaw = System.Text.Encoding.UTF8.GetBytes(json);
-
-            req.uploadHandler = new UploadHandlerRaw(bodyRaw);
-            req.downloadHandler = new DownloadHandlerBuffer();
-
-            req.SetRequestHeader("Content-Type", "application/json");
-            req.SetRequestHeader("Accept", "application/json");
-
-            string accessToken = tokenStore != null ? tokenStore.AccessToken : null;
-
-#if UNITY_EDITOR
-if (string.IsNullOrWhiteSpace(accessToken))
-{
-    accessToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI0N2EzN2Q4ZS1hYTQ5LTRlMzItOGRmMC04NzJmZDE5N2U0NzAiLCJpYXQiOjE3NDg1NjMyMDAsImV4cCI6OTk5OTk5OTk5OX0.OVBxI96G65YqG221phZKUF3Pb7G8DO9ODewmzIPX1cc";
-    Debug.LogWarning("[AuthApi] 임시 debug token 사용 중. 커밋 전 반드시 제거.");
-}
-#endif
-
-            if (!string.IsNullOrWhiteSpace(accessToken))
-            {
-                req.SetRequestHeader("Authorization", $"Bearer {accessToken}");
-                Debug.Log("[AuthApi] CheckNickname Authorization header attached.");
-            }
-            else
-            {
-                Debug.LogWarning("[AuthApi] accessToken이 없어 POST /auth/check-nickname 요청에 Authorization을 붙이지 못했습니다.");
-            }
-
-            yield return req.SendWebRequest();
-
-            string responseText = req.downloadHandler != null ? req.downloadHandler.text : "";
-
-            if (req.result != UnityWebRequest.Result.Success)
-            {
-                string error = $"HTTP {req.responseCode}: {req.error}\n{responseText}";
-                Debug.LogError($"[AuthApi] CheckNickname Error: {error}");
-                onFail?.Invoke(error);
-                yield break;
-            }
-
-            CheckNicknameResponse response = null;
-
-            try
-            {
-                response = JsonUtility.FromJson<CheckNicknameResponse>(responseText);
-            }
-            catch (Exception e)
-            {
-                string error = $"CheckNickname response parse failed: {e.Message}\n{responseText}";
-                Debug.LogError($"[AuthApi] {error}");
-                onFail?.Invoke(error);
-                yield break;
-            }
-
-            if (response == null || !response.isSuccess || response.data == null)
-            {
-                string error = response != null
-                    ? $"code={response.code}, message={response.message}"
-                    : "CheckNickname response is null";
-
-                Debug.LogError($"[AuthApi] CheckNickname API Fail: {error}");
-                onFail?.Invoke(error);
-                yield break;
-            }
-
-            onSuccess?.Invoke(response);
+            Debug.LogWarning("[AuthApi] accessToken is empty. Authorization header was not attached to CheckNickname.");
         }
+
+        var request = new CheckNicknameRequestDto
+        {
+            Nickname = nickname
+        };
+
+        Debug.Log($"[AuthApi] POST {client.BaseUrl}auth/check-nickname");
+
+        Task<ApiResponseOfCheckNicknameResponseDto> task =
+            client.CheckNicknameAsync(request);
+
+        yield return WaitTask(
+            task,
+            response => ValidateApiResponse(
+                response?.IsSuccess,
+                response?.Data,
+                response?.Code,
+                response?.Message,
+                "CheckNickname"
+            ),
+            response => onSuccess?.Invoke(ToLegacyCheckNicknameResponse(response)),
+            onFail
+        );
     }
 
     public IEnumerator UpdateMyProfile(
-    string nickname,
-    Action<PatchUserResponse> onSuccess,
-    Action<string> onFail)
+        string nickname,
+        Action<PatchUserResponse> onSuccess,
+        Action<string> onFail)
     {
-        string url = BuildUrl("/users/me");
+        string accessToken = tokenStore != null ? tokenStore.AccessToken : null;
+        SetAuthorizationHeader(accessToken);
 
-        PatchUserRequest requestBody = new PatchUserRequest
+        if (string.IsNullOrWhiteSpace(accessToken))
         {
-            nickname = nickname,
-            profileImageKey = null
+            Debug.LogWarning("[AuthApi] accessToken is empty. Authorization header was not attached to UpdateMyProfile.");
+        }
+
+        var request = new PatchUserRequestDto
+        {
+            Nickname = nickname,
+            ProfileImageKey = null
         };
 
-        string json = JsonUtility.ToJson(requestBody);
+        Debug.Log($"[AuthApi] PATCH {client.BaseUrl}users/me");
 
-        using UnityWebRequest req = new UnityWebRequest(url, "PATCH");
-        byte[] bodyRaw = Encoding.UTF8.GetBytes(json);
+        Task<ApiResponseOfPatchUserResultDto> task =
+            client.MePATCHAsync(request);
 
-        req.uploadHandler = new UploadHandlerRaw(bodyRaw);
-        req.downloadHandler = new DownloadHandlerBuffer();
-        req.SetRequestHeader("Content-Type", "application/json");
-        req.SetRequestHeader("Accept", "application/json");
+        yield return WaitTask(
+            task,
+            response => ValidateApiResponse(
+                response?.IsSuccess,
+                response?.Data,
+                response?.Code,
+                response?.Message,
+                "UpdateMyProfile"
+            ),
+            response => onSuccess?.Invoke(ToLegacyPatchUserResponse(response)),
+            onFail
+        );
+    }
 
-        string accessToken = tokenStore != null ? tokenStore.AccessToken : null;
-
-        if (!string.IsNullOrWhiteSpace(accessToken))
+    private string ValidateApiResponse(
+        bool? isSuccess,
+        object data,
+        string code,
+        string message,
+        string label)
+    {
+        if (isSuccess != true)
         {
-            req.SetRequestHeader("Authorization", $"Bearer {accessToken}");
-        }
-        else
-        {
-            Debug.LogWarning("[AuthApi] accessToken이 없어 PATCH /users/me 요청에 Authorization을 붙이지 못했습니다.");
-        }
-
-        yield return req.SendWebRequest();
-
-        string responseText = req.downloadHandler != null ? req.downloadHandler.text : "";
-
-        if (req.result != UnityWebRequest.Result.Success)
-        {
-            string error = $"HTTP {req.responseCode}: {req.error}\n{responseText}";
-            Debug.LogError($"[AuthApi] UpdateMyProfile Error: {error}");
-            onFail?.Invoke(error);
-            yield break;
-        }
-
-        PatchUserResponse response = null;
-
-        try
-        {
-            response = JsonUtility.FromJson<PatchUserResponse>(responseText);
-        }
-        catch (Exception e)
-        {
-            string error = $"UpdateMyProfile response parse failed: {e.Message}\n{responseText}";
-            Debug.LogError($"[AuthApi] {error}");
-            onFail?.Invoke(error);
-            yield break;
+            return string.IsNullOrWhiteSpace(message)
+                ? $"{label} failed. code={code}"
+                : message;
         }
 
-        if (response == null || !response.isSuccess || response.data == null)
+        if (data == null)
         {
-            string error = response != null
-                ? $"code={response.code}, message={response.message}"
-                : "UpdateMyProfile response is null";
-
-            Debug.LogError($"[AuthApi] UpdateMyProfile API Fail: {error}");
-            onFail?.Invoke(error);
-            yield break;
+            return $"{label} success but data is null.";
         }
 
-        onSuccess?.Invoke(response);
+        return null;
+    }
+
+    private OAuthLoginResponse ToLegacyOAuthLoginResponse(
+        ApiResponseOfOAuthLoginResponseDto response)
+    {
+        OAuthLoginResponseDto data = response.Data;
+
+        return new OAuthLoginResponse
+        {
+            isSuccess = response.IsSuccess == true,
+            code = response.Code,
+            message = response.Message,
+            data = new OAuthLoginData
+            {
+                userId = data.UserUuid,
+                email = data.Email,
+                nickname = data.Nickname,
+                profileImageUrl = data.ProfileImageUrl,
+                provider = data.Provider?.ToString(),
+                accessToken = data.AccessToken,
+                refreshToken = data.RefreshToken,
+                isNewUser = data.IsNewUser == true
+            }
+        };
+    }
+
+    private RefreshTokenResponse ToLegacyRefreshTokenResponse(
+        ApiResponseOfRefreshTokenResponseDto response)
+    {
+        RefreshTokenResponseDto data = response.Data;
+
+        return new RefreshTokenResponse
+        {
+            isSuccess = response.IsSuccess == true,
+            code = response.Code,
+            message = response.Message,
+            data = new RefreshTokenData
+            {
+                accessToken = data.AccessToken,
+                refreshToken = data.RefreshToken
+            }
+        };
+    }
+
+    private CheckNicknameResponse ToLegacyCheckNicknameResponse(
+        ApiResponseOfCheckNicknameResponseDto response)
+    {
+        CheckNicknameResponseDto data = response.Data;
+
+        return new CheckNicknameResponse
+        {
+            isSuccess = response.IsSuccess == true,
+            code = response.Code,
+            message = response.Message,
+            data = new CheckNicknameData
+            {
+                available = data.Available == true,
+                suggestion = data.Suggestion
+            }
+        };
+    }
+
+    private PatchUserResponse ToLegacyPatchUserResponse(
+        ApiResponseOfPatchUserResultDto response)
+    {
+        PatchUserResultDto data = response.Data;
+
+        return new PatchUserResponse
+        {
+            isSuccess = response.IsSuccess == true,
+            code = response.Code,
+            message = response.Message,
+            data = new PatchUserData
+            {
+                userId = data.UserId,
+                nickname = data.Nickname,
+                profileImageUrl = data.ProfileImageUrl
+            }
+        };
     }
 }

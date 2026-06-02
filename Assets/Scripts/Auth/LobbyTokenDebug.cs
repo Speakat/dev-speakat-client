@@ -6,21 +6,17 @@ public class LobbyTokenDebug : MonoBehaviour
     {
         if (TokenStore.Instance == null)
         {
-            Debug.LogError("[Lobby] TokenStore.Instance is NULL!");
+            Debug.LogError("[LobbyTokenDebug] TokenStore.Instance is null");
             return;
         }
 
-        Debug.Log($"[Lobby] TokenStore object: {TokenStore.Instance.gameObject.name}");
-        Debug.Log($"[Lobby] userUuid: {TokenStore.Instance.UserUuid}");
-        Debug.Log($"[Lobby] accessToken: {TokenStore.Instance.AccessToken}");
-        Debug.Log($"[Lobby] refreshToken: {TokenStore.Instance.RefreshToken}");
+        TokenStore tokenStore = TokenStore.Instance;
 
-        Debug.Log($"[Lobby] User: {TokenStore.Instance.Nickname} ({TokenStore.Instance.Email})");
-        Debug.Log($"[Lobby] provider: {TokenStore.Instance.Provider}");
-
-        if (TokenStore.Instance.HasAccessToken())
-            Debug.Log("[Lobby] Login session exists");
-        else
-            Debug.LogError("[Lobby] No access token,,");
+        Debug.Log($"[LobbyTokenDebug] UserId: {tokenStore.UserId}");
+        Debug.Log($"[LobbyTokenDebug] Email: {tokenStore.Email}");
+        Debug.Log($"[LobbyTokenDebug] Nickname: {tokenStore.Nickname}");
+        Debug.Log($"[LobbyTokenDebug] Provider: {tokenStore.Provider}");
+        Debug.Log($"[LobbyTokenDebug] HasAccessToken: {!string.IsNullOrWhiteSpace(tokenStore.AccessToken)}");
+        Debug.Log($"[LobbyTokenDebug] HasRefreshToken: {!string.IsNullOrWhiteSpace(tokenStore.RefreshToken)}");
     }
 }

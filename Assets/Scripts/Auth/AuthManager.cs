@@ -1,4 +1,3 @@
-using System.IO;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -13,8 +12,7 @@ public class AuthManager : MonoBehaviour
 
     [Header("Scene & UI Routing")]
     [SerializeField] private string nextSceneName = "Stage";
-    [SerializeField] private GameObject signupInfoPanel; //newUser¿ë ÆË¾÷ ÆÐ³Î
-
+    [SerializeField] private GameObject signupInfoPanel;
     [SerializeField] private SignupViewController signupViewController;
 
     private void OnEnable()
@@ -23,7 +21,7 @@ public class AuthManager : MonoBehaviour
             linkHandler.OnAuthorizationCodeReceived += HandleAuthorizationCode;
     }
 
-    public void OnDisable()
+    private void OnDisable()
     {
         if (linkHandler != null)
             linkHandler.OnAuthorizationCodeReceived -= HandleAuthorizationCode;
@@ -31,7 +29,24 @@ public class AuthManager : MonoBehaviour
 
     public void StartGoogleLogin()
     {
+        if (webViewOAuthService == null)
+        {
+            Debug.LogError("[AuthManager] WebViewOAuthService is not assigned.");
+            return;
+        }
+
         webViewOAuthService.StartLogin("google");
+    }
+
+    public void StartKakaoLogin()
+    {
+        if (webViewOAuthService == null)
+        {
+            Debug.LogError("[AuthManager] WebViewOAuthService is not assigned.");
+            return;
+        }
+
+        webViewOAuthService.StartLogin("kakao");
     }
 
     public void StartMockGoogleLogin()
@@ -41,11 +56,11 @@ public class AuthManager : MonoBehaviour
             isSuccess = true,
             data = new OAuthLoginData
             {
-                userUuid = "mock-user-uuid",
+                userId = "mock-user-id",
                 email = "test@gmail.com",
                 nickname = "GoogleUser",
                 profileImageUrl = "https://example.com/profile.png",
-                provider = 0,
+                provider = "GOOGLE",
                 accessToken = "mock-access-token",
                 refreshToken = "mock-refresh-token",
                 isNewUser = true
@@ -57,33 +72,38 @@ public class AuthManager : MonoBehaviour
         OnLoginSuccess(mockResponse);
     }
 
-    public void StartKakaoLogin()
-    {
-        webViewOAuthService.StartLogin("kakao");
-    }
-
     private void HandleAuthorizationCode(string provider, string authorizationCode)
     {
-        Debug.LogError($"[AuthManager] Authorization code received, provider={provider}");
+        Debug.Log($"[AuthManager] Authorization code received, provider={provider}");
+
+        if (authApi == null)
+        {
+            Debug.LogError("[AuthManager] AuthApi is not assigned.");
+            return;
+        }
 
         StartCoroutine(authApi.LoginWithOAuth(
-            provider, authorizationCode, OnLoginSuccess, OnLoginFail
+            provider,
+            authorizationCode,
+            OnLoginSuccess,
+            OnLoginFail
         ));
     }
 
     public void OnReceiveCodeFromJS(string codeData)
     {
         int idx = codeData.IndexOf(':');
+
         if (idx <= 0 || idx >= codeData.Length - 1)
         {
-            Debug.LogError("[AuthManager] Invalid code from JS");
+            Debug.LogError($"[AuthManager] Invalid code from JS: {codeData}");
             return;
         }
 
         string provider = codeData.Substring(0, idx);
         string code = codeData.Substring(idx + 1);
 
-        Debug.Log($"[AuthManager] WebGL Code Received: {provider}");
+        Debug.Log($"[AuthManager] WebGL Code Received: provider={provider}");
         HandleAuthorizationCode(provider, code);
     }
 
@@ -107,7 +127,7 @@ public class AuthManager : MonoBehaviour
             return;
         }
 
-        Debug.Log($"[AuthManager] OnLoginSuccess called. uuid={response.data.userUuid}, nickname={response.data.nickname}, isNewUser={response.data.isNewUser}");
+        Debug.Log($"[AuthManager] OnLoginSuccess called. userId={response.data.userId}, nickname={response.data.nickname}, isNewUser={response.data.isNewUser}");
 
         if (TokenStore.Instance == null)
         {
@@ -142,6 +162,11 @@ public class AuthManager : MonoBehaviour
                 Debug.LogWarning("[AuthManager] signupInfoPanel is not assigned. Move to next scene.");
                 SceneManager.LoadScene(nextSceneName);
             }
+        }
+        else
+        {
+            Debug.Log("[AuthManager] Existing user. Move to next scene.");
+            SceneManager.LoadScene(nextSceneName);
         }
     }
 

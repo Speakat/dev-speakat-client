@@ -18,11 +18,11 @@ public class OAuthLoginResponse
 [Serializable]
 public class OAuthLoginData
 {
-    public string userUuid;
+    public string userId;
     public string email;
     public string nickname;
     public string profileImageUrl;
-    public int provider;
+    public string provider;
     public string accessToken;
     public string refreshToken;
     public bool isNewUser;

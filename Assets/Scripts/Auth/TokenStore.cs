@@ -4,13 +4,13 @@ public class TokenStore : MonoBehaviour
 {
     public static TokenStore Instance { get; private set; }
 
-    public string UserUuid { get; private set; }
-    public string AccessToken { get; private set; }
-    public string RefreshToken { get; private set; }
+    public string UserId { get; private set; }
     public string Email { get; private set; }
     public string Nickname { get; private set; }
-    public int Provider { get; private set; }
     public string ProfileImageUrl { get; private set; }
+    public string Provider { get; private set; }
+    public string AccessToken { get; private set; }
+    public string RefreshToken { get; private set; }
     public bool IsNewUser { get; private set; }
 
     private void Awake()
@@ -29,20 +29,20 @@ public class TokenStore : MonoBehaviour
     {
         if (data == null)
         {
-            Debug.LogError("[TokenStore] Login data is null");
+            Debug.LogError("[TokenStore] SetLoginData failed: data is null.");
             return;
         }
 
-        UserUuid = data.userUuid;
-        AccessToken = data.accessToken;
-        RefreshToken = data.refreshToken;
+        UserId = data.userId;
         Email = data.email;
         Nickname = data.nickname;
-        Provider = data.provider;
         ProfileImageUrl = data.profileImageUrl;
+        Provider = data.provider;
+        AccessToken = data.accessToken;
+        RefreshToken = data.refreshToken;
         IsNewUser = data.isNewUser;
 
-        Debug.Log($"[TokenStore] Login data saved: uuid={UserUuid}, nickname={Nickname}, provider={Provider}, isNewUser={IsNewUser}");
+        Debug.Log($"[TokenStore] Login data saved. userId={UserId}, nickname={Nickname}, provider={Provider}");
     }
 
     public void SetTokens(string accessToken, string refreshToken)
@@ -51,20 +51,15 @@ public class TokenStore : MonoBehaviour
         RefreshToken = refreshToken;
     }
 
-    public bool HasAccessToken()
-    {
-        return !string.IsNullOrEmpty(AccessToken);
-    }
-
     public void Clear()
     {
-        UserUuid = null;
-        AccessToken = null;
-        RefreshToken = null;
+        UserId = null;
         Email = null;
         Nickname = null;
-        Provider = 0;
         ProfileImageUrl = null;
+        Provider = null;
+        AccessToken = null;
+        RefreshToken = null;
         IsNewUser = false;
     }
 }
