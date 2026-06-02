@@ -1,4 +1,4 @@
-using System;
+ï»¿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -9,17 +9,23 @@ public class VocabularyApiService : MonoBehaviour
 {
     [SerializeField] private SpeakatApiProvider apiProvider;
 
+    private SpeakatClient Client
+    {
+        get
+        {
+            if (apiProvider == null)
+                throw new Exception("[VocabularyApiService] apiProviderê°€ ì—°ê²°ë˜ì§€ ì•Šì•˜ìŠµë‹ˆë‹¤.");
+
+            return apiProvider.Client;
+        }
+    }
+
     public async Task<VocabularyData> GetFlashcardsAsync(string cursor = null, int size = 20, long? questId = null)
     {
-        if (apiProvider == null)
-        {
-            throw new Exception("[VocabularyApiService] apiProvider°¡ ¿¬°áµÇÁö ¾Ê¾Ò½À´Ï´Ù.");
-        }
-
-        Debug.Log($"[VocabularyApiService] GET /flashcards È£Ãâ: cursor={cursor}, size={size}, questId={questId}");
+        Debug.Log($"[VocabularyApiService] GET /flashcards í˜¸ì¶œ: cursor={cursor}, size={size}, questId={questId}");
         Debug.Log($"[VocabularyApiService] BaseUrl={apiProvider.Client.BaseUrl}");
 
-        var response = await apiProvider.Client.FlashcardsGETAsync(cursor, size, questId);
+        var response = await Client.FlashcardsGETAsync(cursor, size, questId);
 
         if (response == null)
         {
@@ -38,7 +44,7 @@ public class VocabularyApiService : MonoBehaviour
             return new VocabularyData
             {
                 wordList = new List<WordData>(),
-                questFilters = new List<string> { "ÀüÃ¼" },
+                questFilters = new List<string> { "ì „ì²´" },
                 nextCursor = null,
                 hasMore = false,
                 wordsToReviewCount = 0
@@ -71,7 +77,7 @@ public class VocabularyApiService : MonoBehaviour
 
         List<QuestFilterData> questFilterDataList = new List<QuestFilterData>
         {
-            new QuestFilterData("ÀüÃ¼", null)
+            new QuestFilterData("ì „ì²´", null)
         };
 
         questFilterDataList.AddRange(
@@ -109,7 +115,7 @@ public class VocabularyApiService : MonoBehaviour
     {
         if (apiProvider == null)
         {
-            throw new Exception("[VocabularyApiService] apiProvider°¡ ¿¬°áµÇÁö ¾Ê¾Ò½À´Ï´Ù.");
+            throw new Exception("[VocabularyApiService] apiProviderê°€ ì—°ê²°ë˜ì§€ ì•Šì•˜ìŠµë‹ˆë‹¤.");
         }
 
         var response = await apiProvider.Client.FlashcardsGET2Async(flashcardId);
@@ -146,7 +152,7 @@ public class VocabularyApiService : MonoBehaviour
     {
         if (apiProvider == null)
         {
-            throw new Exception("[VocabularyApiService] apiProvider°¡ ¿¬°áµÇÁö ¾Ê¾Ò½À´Ï´Ù.");
+            throw new Exception("[VocabularyApiService] apiProviderê°€ ì—°ê²°ë˜ì§€ ì•Šì•˜ìŠµë‹ˆë‹¤.");
         }
 
         var body = new PatchFlashcardRequestDto

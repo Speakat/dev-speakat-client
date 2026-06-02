@@ -1,4 +1,4 @@
-using System.Collections;
+ï»¿using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
@@ -79,7 +79,7 @@ public class FlashCardView : MonoBehaviour, IPointerClickHandler, IPointerDownHa
 
         if (words.Count == 0)
         {
-            Debug.LogWarning("[FlashCardView] ´Ü¾î µ¥ÀÌÅÍ°¡ ºñ¾î ÀÖÀ½");
+            Debug.LogWarning("[FlashCardView] ë‹¨ì–´ ë°ì´í„°ê°€ ë¹„ì–´ ìˆìŒ");
             return;
         }
 
@@ -100,7 +100,7 @@ public class FlashCardView : MonoBehaviour, IPointerClickHandler, IPointerDownHa
 
     public void Close()
     {
-        Debug.Log("[FlashCardView] Close È£Ãâ");
+        Debug.Log("[FlashCardView] Close í˜¸ì¶œ");
 
         if (flashCardPanel != null)
             flashCardPanel.SetActive(false);
@@ -122,7 +122,7 @@ public class FlashCardView : MonoBehaviour, IPointerClickHandler, IPointerDownHa
 
         RefreshCard();
 
-        Debug.Log($"[FlashCardView] ´ÙÀ½ ´Ü¾î: index={currentIndex}, word={words[currentIndex].word}");
+        Debug.Log($"[FlashCardView] ë‹¤ìŒ ë‹¨ì–´: index={currentIndex}, word={words[currentIndex].word}");
     }
 
     public void ShowPrev()
@@ -138,7 +138,7 @@ public class FlashCardView : MonoBehaviour, IPointerClickHandler, IPointerDownHa
 
         RefreshCard();
 
-        Debug.Log($"[FlashCardView] ÀÌÀü ´Ü¾î: index={currentIndex}, word={words[currentIndex].word}");
+        Debug.Log($"[FlashCardView] ì´ì „ ë‹¨ì–´: index={currentIndex}, word={words[currentIndex].word}");
     }
 
     private void ToggleCard()
@@ -148,7 +148,7 @@ public class FlashCardView : MonoBehaviour, IPointerClickHandler, IPointerDownHa
         isFront = !isFront;
         RefreshCard();
 
-        Debug.Log(isFront ? "[FlashCardView] ¾Õ¸é Ç¥½Ã" : "[FlashCardView] µŞ¸é Ç¥½Ã");
+        Debug.Log(isFront ? "[FlashCardView] ì•ë©´ í‘œì‹œ" : "[FlashCardView] ë’·ë©´ í‘œì‹œ");
     }
 
     private void RefreshCard()
@@ -193,13 +193,13 @@ public class FlashCardView : MonoBehaviour, IPointerClickHandler, IPointerDownHa
 
         if (currentWord.flashcardId <= 0)
         {
-            Debug.LogWarning("[FlashCardView] flashcardId°¡ ¾ø¾î »ó¼¼ Á¶È¸¸¦ ÇÒ ¼ö ¾ø½À´Ï´Ù.");
+            Debug.LogWarning("[FlashCardView] flashcardIdê°€ ì—†ì–´ ìƒì„¸ ì¡°íšŒë¥¼ í•  ìˆ˜ ì—†ìŠµë‹ˆë‹¤.");
             return;
         }
 
         if (vocabularyApiService == null)
         {
-            Debug.LogError("[FlashCardView] vocabularyApiService°¡ ¿¬°áµÇÁö ¾Ê¾Ò½À´Ï´Ù.");
+            Debug.LogError("[FlashCardView] vocabularyApiServiceê°€ ì—°ê²°ë˜ì§€ ì•Šì•˜ìŠµë‹ˆë‹¤.");
             return;
         }
 
@@ -208,17 +208,17 @@ public class FlashCardView : MonoBehaviour, IPointerClickHandler, IPointerDownHa
 
         try
         {
-            Debug.Log($"[FlashCardView] »ó¼¼ Á¶È¸ ½ÃÀÛ: flashcardId={currentWord.flashcardId}");
+            Debug.Log($"[FlashCardView] ìƒì„¸ ì¡°íšŒ ì‹œì‘: flashcardId={currentWord.flashcardId}");
 
             WordData detail = await vocabularyApiService.GetFlashcardDetailAsync(currentWord.flashcardId);
 
             if (detail == null)
             {
-                Debug.LogWarning("[FlashCardView] »ó¼¼ Á¶È¸ °á°ú°¡ nullÀÔ´Ï´Ù.");
+                Debug.LogWarning("[FlashCardView] ìƒì„¸ ì¡°íšŒ ê²°ê³¼ê°€ nullì…ë‹ˆë‹¤.");
                 return;
             }
 
-            // »ó¼¼ ÀÀ´äÀ¸·Î ÇöÀç µ¥ÀÌÅÍ °»½Å
+            // ìƒì„¸ ì‘ë‹µìœ¼ë¡œ í˜„ì¬ ë°ì´í„° ê°±ì‹ 
             currentWord.word = detail.word;
             currentWord.meaning = detail.meaning;
             currentWord.pronunciation = detail.pronunciation;
@@ -229,7 +229,7 @@ public class FlashCardView : MonoBehaviour, IPointerClickHandler, IPointerDownHa
 
             if (string.IsNullOrWhiteSpace(currentWord.audioUrl))
             {
-                Debug.LogWarning($"[FlashCardView] audioUrlÀÌ ¾ø½À´Ï´Ù: {currentWord.word}");
+                Debug.LogWarning($"[FlashCardView] audioUrlì´ ì—†ìŠµë‹ˆë‹¤: {currentWord.word}");
                 return;
             }
 
@@ -237,7 +237,7 @@ public class FlashCardView : MonoBehaviour, IPointerClickHandler, IPointerDownHa
         }
         catch (System.Exception e)
         {
-            Debug.LogError($"[FlashCardView] »ó¼¼ Á¶È¸ ¶Ç´Â ¿Àµğ¿À Àç»ı ½ÇÆĞ:\n{e}");
+            Debug.LogError($"[FlashCardView] ìƒì„¸ ì¡°íšŒ ë˜ëŠ” ì˜¤ë””ì˜¤ ì¬ìƒ ì‹¤íŒ¨:\n{e}");
         }
         finally
         {
@@ -254,7 +254,7 @@ public class FlashCardView : MonoBehaviour, IPointerClickHandler, IPointerDownHa
 
             if (request.result != UnityWebRequest.Result.Success)
             {
-                Debug.LogWarning($"[FlashCardView] ¿Àµğ¿À ·Îµå ½ÇÆĞ: {request.error}");
+                Debug.LogWarning($"[FlashCardView] ì˜¤ë””ì˜¤ ë¡œë“œ ì‹¤íŒ¨: {request.error}");
                 yield break;
             }
 
@@ -262,7 +262,7 @@ public class FlashCardView : MonoBehaviour, IPointerClickHandler, IPointerDownHa
 
             if (clip == null)
             {
-                Debug.LogWarning("[FlashCardView] AudioClipÀÌ nullÀÔ´Ï´Ù.");
+                Debug.LogWarning("[FlashCardView] AudioClipì´ nullì…ë‹ˆë‹¤.");
                 yield break;
             }
 
@@ -272,7 +272,7 @@ public class FlashCardView : MonoBehaviour, IPointerClickHandler, IPointerDownHa
             audioSource.clip = clip;
             audioSource.Play();
 
-            Debug.Log("[FlashCardView] ¿Àµğ¿À Àç»ı ½ÃÀÛ");
+            Debug.Log("[FlashCardView] ì˜¤ë””ì˜¤ ì¬ìƒ ì‹œì‘");
         }
     }
 
@@ -292,16 +292,16 @@ public class FlashCardView : MonoBehaviour, IPointerClickHandler, IPointerDownHa
             else
             {
                 masterStatusText.text = data.isMastered
-                    ? "¸¶½ºÅÍÇÑ ´Ü¾î¿¹¿ä!"
-                    : "ÀÌ ´Ü¾î¸¦ ¾Ë°í ÀÖ³ª¿ä?";
+                    ? "ë§ˆìŠ¤í„°í•œ ë‹¨ì–´ì˜ˆìš”!"
+                    : "ì´ ë‹¨ì–´ë¥¼ ì•Œê³  ìˆë‚˜ìš”?";
             }
         }
 
         if (knownButtonText != null)
-            knownButtonText.text = data.isMastered ? "¾Ë°í ÀÖ¾î¿ä" : "Àß ¾Ë¾Æ¿ä!";
+            knownButtonText.text = data.isMastered ? "ì•Œê³  ìˆì–´ìš”" : "ì˜ ì•Œì•„ìš”!";
 
         if (unknownButtonText != null)
-            unknownButtonText.text = data.isMastered ? "´Ù½Ã º¹½ÀÇÒ·¡¿ä" : "¾ÆÁ÷ ¾î·Á¿ö¿ä";
+            unknownButtonText.text = data.isMastered ? "ë‹¤ì‹œ ë³µìŠµí• ë˜ìš”" : "ì•„ì§ ì–´ë ¤ì›Œìš”";
 
         bool canInteract = !isUpdatingMasterState;
 
@@ -324,13 +324,13 @@ public class FlashCardView : MonoBehaviour, IPointerClickHandler, IPointerDownHa
 
         if (currentWord.flashcardId <= 0)
         {
-            Debug.LogWarning("[FlashCardView] flashcardId°¡ ¾ø¾î ¸¶½ºÅÍ »óÅÂ¸¦ ÀúÀåÇÒ ¼ö ¾ø½À´Ï´Ù.");
+            Debug.LogWarning("[FlashCardView] flashcardIdê°€ ì—†ì–´ ë§ˆìŠ¤í„° ìƒíƒœë¥¼ ì €ì¥í•  ìˆ˜ ì—†ìŠµë‹ˆë‹¤.");
             return;
         }
 
         if (vocabularyApiService == null)
         {
-            Debug.LogError("[FlashCardView] vocabularyApiService°¡ ¿¬°áµÇÁö ¾Ê¾Ò½À´Ï´Ù.");
+            Debug.LogError("[FlashCardView] vocabularyApiServiceê°€ ì—°ê²°ë˜ì§€ ì•Šì•˜ìŠµë‹ˆë‹¤.");
             return;
         }
 
@@ -347,14 +347,14 @@ public class FlashCardView : MonoBehaviour, IPointerClickHandler, IPointerDownHa
             currentWord.isMastered = savedIsMastered;
 
             Debug.Log(
-                $"[FlashCardView] ¸¶½ºÅÍ »óÅÂ ÀúÀå ¼º°ø: " +
+                $"[FlashCardView] ë§ˆìŠ¤í„° ìƒíƒœ ì €ì¥ ì„±ê³µ: " +
                 $"flashcardId={currentWord.flashcardId}, word={currentWord.word}, isMastered={savedIsMastered}"
             );
 
             feedbackIndex = currentIndex;
             feedbackMessage = savedIsMastered
-                ? "¸¶½ºÅÍÇÑ ´Ü¾î¿¹¿ä!"
-                : "´ÙÀ½¿¡ ´Ù½Ã º¹½ÀÇØ¿ä!";
+                ? "ë§ˆìŠ¤í„°í•œ ë‹¨ì–´ì˜ˆìš”!"
+                : "ë‹¤ìŒì— ë‹¤ì‹œ ë³µìŠµí•´ìš”!";
 
             RefreshMasterChoiceUI(currentWord);
 
@@ -366,7 +366,7 @@ public class FlashCardView : MonoBehaviour, IPointerClickHandler, IPointerDownHa
         }
         catch (System.Exception e)
         {
-            Debug.LogError($"[FlashCardView] ¸¶½ºÅÍ »óÅÂ ÀúÀå ½ÇÆĞ:\n{e}");
+            Debug.LogError($"[FlashCardView] ë§ˆìŠ¤í„° ìƒíƒœ ì €ì¥ ì‹¤íŒ¨:\n{e}");
         }
         finally
         {
@@ -417,12 +417,12 @@ public class FlashCardView : MonoBehaviour, IPointerClickHandler, IPointerDownHa
 
         if (deltaX < 0)
         {
-            Debug.Log("[FlashCardView] ¿ŞÂÊ ½º¿ÍÀÌÇÁ ¡æ ´ÙÀ½ ´Ü¾î");
+            Debug.Log("[FlashCardView] ì™¼ìª½ ìŠ¤ì™€ì´í”„ â†’ ë‹¤ìŒ ë‹¨ì–´");
             ShowNext();
         }
         else
         {
-            Debug.Log("[FlashCardView] ¿À¸¥ÂÊ ½º¿ÍÀÌÇÁ ¡æ ÀÌÀü ´Ü¾î");
+            Debug.Log("[FlashCardView] ì˜¤ë¥¸ìª½ ìŠ¤ì™€ì´í”„ â†’ ì´ì „ ë‹¨ì–´");
             ShowPrev();
         }
     }
@@ -435,18 +435,18 @@ public class FlashCardView : MonoBehaviour, IPointerClickHandler, IPointerDownHa
 
             if (pressedButton == knownButton || pressedButton == unknownButton || pressedButton == soundButton)
             {
-                Debug.Log("[FlashCardView] Á¶ÀÛ ¹öÆ° Å¬¸¯ÀÌ¹Ç·Î Ä«µå µÚÁı±â ¹«½Ã");
+                Debug.Log("[FlashCardView] ì¡°ì‘ ë²„íŠ¼ í´ë¦­ì´ë¯€ë¡œ ì¹´ë“œ ë’¤ì§‘ê¸° ë¬´ì‹œ");
                 return;
             }
         }
 
         if (didSwipe)
         {
-            Debug.Log("[FlashCardView] ½º¿ÍÀÌÇÁ Á÷ÈÄ Å¬¸¯ ¹«½Ã");
+            Debug.Log("[FlashCardView] ìŠ¤ì™€ì´í”„ ì§í›„ í´ë¦­ ë¬´ì‹œ");
             return;
         }
 
-        Debug.Log("[FlashCardView] Ä«µå ÅÇ");
+        Debug.Log("[FlashCardView] ì¹´ë“œ íƒ­");
         ToggleCard();
     }
 }

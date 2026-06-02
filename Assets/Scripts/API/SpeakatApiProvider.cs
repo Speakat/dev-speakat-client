@@ -1,4 +1,4 @@
-using System;
+ï»¿using System;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using UnityEngine;
@@ -21,6 +21,7 @@ public class SpeakatApiProvider : MonoBehaviour
                 CreateClient();
             }
 
+            RefreshAuthHeader();
             return client;
         }
     }
@@ -32,34 +33,37 @@ public class SpeakatApiProvider : MonoBehaviour
 
     private void CreateClient()
     {
-        httpClient?.Dispose();
-
-        string normalizedBaseUrl = baseUrl.EndsWith("/") ? baseUrl : baseUrl + "/";
-
-        httpClient = new HttpClient();
-        httpClient.BaseAddress = new Uri(normalizedBaseUrl);
-
-        string accessToken = ResolveAccessToken();
-
-        if (!string.IsNullOrEmpty(accessToken))
+        if (httpClient != null && client != null)
         {
-            httpClient.DefaultRequestHeaders.Authorization =
-                new AuthenticationHeaderValue("Bearer", accessToken);
-
-            Debug.Log("[SpeakatApiProvider] Authorization Bearer token Àû¿ë ¿Ï·á");
-            Debug.Log($"[SpeakatApiProvider] Authorization Scheme={httpClient.DefaultRequestHeaders.Authorization?.Scheme}");
-            Debug.Log($"[SpeakatApiProvider] Authorization Parameter Exists={!string.IsNullOrEmpty(httpClient.DefaultRequestHeaders.Authorization?.Parameter)}");
-        }
-        else
-        {
-            Debug.LogWarning("[SpeakatApiProvider] AccessTokenÀÌ ¾ø½À´Ï´Ù. ºñ·Î±×ÀÎ »óÅÂ·Î API Client¸¦ »ı¼ºÇÕ´Ï´Ù.");
+            return;
         }
 
-        client = new SpeakatClient(httpClient);
-        client.BaseUrl = normalizedBaseUrl;
+        string normalizedBaseUrl = NormalizeBaseUrl(baseUrl);
+
+        httpClient = new HttpClient
+        {
+            BaseAddress = new Uri(normalizedBaseUrl)
+        };
+
+        client = new SpeakatClient(httpClient)
+        {
+            BaseUrl = normalizedBaseUrl
+        };
+
+        RefreshAuthHeader();
 
         Debug.Log($"[SpeakatApiProvider] BaseUrl={client.BaseUrl}");
         Debug.Log($"[SpeakatApiProvider] HttpClient.BaseAddress={httpClient.BaseAddress}");
+    }
+
+    private string NormalizeBaseUrl(string url)
+    {
+        if (string.IsNullOrWhiteSpace(url))
+        {
+            return "https://speakat.hyorim.shop/";
+        }
+
+        return url.EndsWith("/") ? url : url + "/";
     }
 
     private string ResolveAccessToken()
@@ -69,12 +73,12 @@ public class SpeakatApiProvider : MonoBehaviour
         if (TokenStore.Instance != null && !string.IsNullOrEmpty(TokenStore.Instance.AccessToken))
         {
             accessToken = TokenStore.Instance.AccessToken.Trim();
-            Debug.Log("[SpeakatApiProvider] TokenStore.AccessTokenÀ» »ç¿ëÇÕ´Ï´Ù.");
+            Debug.Log("[SpeakatApiProvider] TokenStore.AccessTokenì„ ì‚¬ìš©í•©ë‹ˆë‹¤.");
         }
         else if (!string.IsNullOrEmpty(debugAccessToken))
         {
             accessToken = debugAccessToken.Trim();
-            Debug.LogWarning("[SpeakatApiProvider] TokenStore°¡ ¾ø¾î debugAccessTokenÀ» »ç¿ëÇÕ´Ï´Ù.");
+            Debug.LogWarning("[SpeakatApiProvider] TokenStoreê°€ ë¹„ì–´ ìˆì–´ debugAccessTokenì„ ì‚¬ìš©í•©ë‹ˆë‹¤.");
         }
 
         if (!string.IsNullOrEmpty(accessToken))
@@ -90,7 +94,6 @@ public class SpeakatApiProvider : MonoBehaviour
     {
         if (httpClient == null)
         {
-            CreateClient();
             return;
         }
 
@@ -103,12 +106,18 @@ public class SpeakatApiProvider : MonoBehaviour
             httpClient.DefaultRequestHeaders.Authorization =
                 new AuthenticationHeaderValue("Bearer", accessToken);
 
-            Debug.Log("[SpeakatApiProvider] Authorization Çì´õ °»½Å ¿Ï·á");
+            Debug.Log("[SpeakatApiProvider] Authorization Bearer token ì„¤ì • ì™„ë£Œ");
+        }
+        else
+        {
+            Debug.LogWarning("[SpeakatApiProvider] AccessTokenì´ ì—†ìŠµë‹ˆë‹¤. ë¹„ë¡œê·¸ì¸ ìƒíƒœë¡œ API Clientë¥¼ ì‚¬ìš©í•©ë‹ˆë‹¤.");
         }
     }
 
     private void OnDestroy()
     {
         httpClient?.Dispose();
+        httpClient = null;
+        client = null;
     }
 }

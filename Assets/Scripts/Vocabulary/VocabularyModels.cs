@@ -1,19 +1,16 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.Networking;
 using UnityEngine.Pool;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
-public class VocabularyView : MonoBehaviour
+public class VocabularyModels : MonoBehaviour
 {
-    // 추후 요구사항에 맞게 서브 뷰들이 추가될 자리를 미리 비워둠
-    // [Header("Child Views")]
-    // [SerializeField] private VocabularyMainView vocabMainView;
-    // [SerializeField] private WordReviewView wordReviewView;
-
     [Header("UI References")]
 
     [SerializeField] private Image vocabTabIcon; // 단어장 탭 아이콘 변수명 변경
@@ -38,6 +35,11 @@ public class VocabularyView : MonoBehaviour
     [SerializeField] private Button flashCardBackButton;
     [SerializeField] private GameObject flashCardPanel;
     [SerializeField] private string previousSceneName = "Lobby";
+
+    [Header("Audio")]
+    [SerializeField] private AudioSource audioSource;
+
+    private bool isPlayingWordAudio = false;
 
     private IObjectPool<GameObject> vocaCardPool;
     private List<GameObject> activeCards = new List<GameObject>();
@@ -200,7 +202,7 @@ public class VocabularyView : MonoBehaviour
 
             VocaCard cardScript = cardObj.GetComponent<VocaCard>();
             if (cardScript != null)
-                cardScript.Setup(wordData);
+                cardScript.Setup(wordData, OnClickVocaCardSound);
 
             activeCards.Add(cardObj);
         }
@@ -350,7 +352,7 @@ public class VocabularyView : MonoBehaviour
                     });
                 }
 
-                Image image = tabObj.GetComponent<Image>();
+    Image image = tabObj.GetComponent<Image>();
                 if (image != null)
                 {
                     bool isSelected = selectedQuestId == filter.questId;
@@ -364,5 +366,125 @@ public class VocabularyView : MonoBehaviour
     {
         Debug.Log($"[VocabularyView] 필터 클릭: questId={questId}");
         await LoadApiData(questId);
+    }
+
+    private async void OnClickVocaCardSound(WordData word)
+    {
+        if (word == null)
+        {
+            Debug.LogWarning("[VocabularyView] 재생할 WordData가 없습니다.");
+            return;
+        }
+
+        if (isPlayingWordAudio)
+        {
+            Debug.Log("[VocabularyView] 이미 오디오를 준비/재생 중입니다.");
+            return;
+        }
+
+        if (word.flashcardId <= 0)
+        {
+            Debug.LogWarning($"[VocabularyView] flashcardId가 없어 상세 조회를 할 수 없습니다: {word.word}");
+            return;
+        }
+
+        if (vocabularyApiService == null)
+        {
+            Debug.LogError("[VocabularyView] vocabularyApiService가 연결되지 않았습니다.");
+            return;
+        }
+
+        isPlayingWordAudio = true;
+
+        try
+        {
+            if (string.IsNullOrWhiteSpace(word.audioUrl))
+            {
+                Debug.Log($"[VocabularyView] audioUrl 없음. 상세 조회 시작: flashcardId={word.flashcardId}");
+
+                WordData detail = await vocabularyApiService.GetFlashcardDetailAsync(word.flashcardId);
+
+                if (detail == null)
+                {
+                    Debug.LogWarning("[VocabularyView] 상세 조회 결과가 null입니다.");
+                    isPlayingWordAudio = false;
+                    return;
+                }
+
+                word.word = detail.word;
+                word.meaning = detail.meaning;
+                word.pronunciation = detail.pronunciation;
+                word.audioUrl = detail.audioUrl;
+                word.isMastered = detail.isMastered;
+
+                Debug.Log($"[VocabularyView] 상세 조회 완료: word={word.word}, audioUrl={word.audioUrl}");
+            }
+
+            if (string.IsNullOrWhiteSpace(word.audioUrl))
+            {
+                Debug.LogWarning($"[VocabularyView] audioUrl이 없습니다: {word.word}");
+                isPlayingWordAudio = false;
+                return;
+            }
+
+            StartCoroutine(PlayAudioFromUrl(word.audioUrl, () =>
+            {
+                isPlayingWordAudio = false;
+            }));
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError($"[VocabularyView] 발음 재생 실패:\n{e}");
+            isPlayingWordAudio = false;
+        }
+    }
+
+    private IEnumerator PlayAudioFromUrl(string audioUrl, System.Action onFinished = null)
+    {
+        if (string.IsNullOrWhiteSpace(audioUrl))
+        {
+            Debug.LogWarning("[VocabularyView] audioUrl이 비어 있습니다.");
+            onFinished?.Invoke();
+            yield break;
+        }
+
+        using (UnityWebRequest request = UnityWebRequestMultimedia.GetAudioClip(audioUrl, AudioType.MPEG))
+        {
+            yield return request.SendWebRequest();
+
+            if (request.result != UnityWebRequest.Result.Success)
+            {
+                Debug.LogWarning($"[VocabularyView] 오디오 로드 실패: {request.error}, url={audioUrl}");
+                onFinished?.Invoke();
+                yield break;
+            }
+
+            AudioClip clip = DownloadHandlerAudioClip.GetContent(request);
+
+            if (clip == null)
+            {
+                Debug.LogWarning("[VocabularyView] AudioClip이 null입니다.");
+                onFinished?.Invoke();
+                yield break;
+            }
+
+            if (audioSource == null)
+            {
+                audioSource = gameObject.GetComponent<AudioSource>();
+
+                if (audioSource == null)
+                    audioSource = gameObject.AddComponent<AudioSource>();
+            }
+
+            audioSource.Stop();
+            audioSource.clip = clip;
+            audioSource.Play();
+
+            Debug.Log("[VocabularyView] 오디오 재생 시작");
+
+            yield return new WaitWhile(() => audioSource != null && audioSource.isPlaying);
+
+            onFinished?.Invoke();
+        }
     }
 }
