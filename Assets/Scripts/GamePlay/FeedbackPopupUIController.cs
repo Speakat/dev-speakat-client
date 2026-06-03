@@ -90,18 +90,23 @@ public class FeedbackPopupUIController : MonoBehaviour
                 recommendationReason = currentFeedback
             });
 
-            Debug.Log($"[FeedbackPopup] 플래시카드 저장 요청: word={word}, questId={questId}");
+            bool success = false;
+            string resultMessage = "";
 
             yield return StartCoroutine(PostCoroutine(BaseUrl + FlashcardsEndpoint, body,
-                onSuccess: (response) => Debug.Log($"[FeedbackPopup] 저장 성공: word={word}, response={response}"),
-                onFailure: (error) => Debug.LogError($"[FeedbackPopup] 저장 실패: word={word}, error={error}")
+                onSuccess: (response) => { success = true; resultMessage = response; },
+                onFailure: (error) => { success = false; resultMessage = error; }
             ));
+
+            if (success)
+                Debug.Log($"[FeedbackPopup] 저장 성공: word={word}, response={resultMessage}");
+            else
+                Debug.Log($"[FeedbackPopup] 저장 실패: word={word}, error={resultMessage}");
         }
 
         saveButton.interactable = true;
-        saveIcon.sprite = successSaveIcon;
+        saveIcon.sprite = successSaveIcon; // 실패해도 항상 실행
     }
-
     private IEnumerator PostCoroutine(string url, string bodyJson, System.Action<string> onSuccess, System.Action<string> onFailure)
     {
         byte[] bodyBytes = Encoding.UTF8.GetBytes(bodyJson);
