@@ -44,7 +44,7 @@ public class StageButtonPanel : MonoBehaviour
         titleText.text = title;
 
         // status에 따른 버튼 이미지 세팅
-        if (status == "COMPLETED")
+        if (status == "Completed")
         {
             buttonImage.sprite = completeImage;
         }
