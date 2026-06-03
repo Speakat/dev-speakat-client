@@ -1,7 +1,9 @@
+using System.Collections;
 using System.Collections.Generic;
+using System.Text;
 using TMPro;
-using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.Networking;
 using UnityEngine.UI;
 
 public class FeedbackPopupUIController : MonoBehaviour
@@ -14,9 +16,18 @@ public class FeedbackPopupUIController : MonoBehaviour
     private TextMeshProUGUI feedbackText;
     [SerializeField]
     private TextMeshProUGUI wordText;
-    [SerializeField]
-    private TextMeshProUGUI meanText;
-    
+
+    public Image saveIcon;
+
+    public Sprite defaultSaveIcon;
+
+    public Sprite successSaveIcon;
+
+    private const string BaseUrl = "https://speakat.hyorim.shop";
+    private const string FlashcardsEndpoint = "/flashcards";
+    private string currentFeedback = "";
+    private List<string> currentSuggestions = new List<string>();
+
     private void Awake()
     {
         replayButton.onClick.AddListener(ReplayDialogue);
@@ -25,6 +36,12 @@ public class FeedbackPopupUIController : MonoBehaviour
 
     public void SetFeedbackPopup(string feedback, List<string> suggestions)
     {
+        currentFeedback = feedback;
+        currentSuggestions = suggestions;
+
+        saveIcon.sprite = defaultSaveIcon;
+        saveButton.interactable = true;
+
         SetFeedback(feedback);
         SetWord(string.Join(", ", suggestions));
 
@@ -41,15 +58,67 @@ public class FeedbackPopupUIController : MonoBehaviour
         wordText.text = word;
     }
 
-    // 해당 대화 재시작
     private void ReplayDialogue()
     {
         gameObject.SetActive(false);
     }
 
-    // 단어 저장
     private void SaveWord()
     {
-        gameObject.SetActive(false);
+        Debug.Log($"[FeedbackPopup] 저장 버튼 클릭: feedback='{currentFeedback}', suggestions=[{string.Join(", ", currentSuggestions)}]");
+        if (currentSuggestions == null || currentSuggestions.Count == 0)
+        {
+            Debug.LogWarning("[FeedbackPopup] 저장할 단어가 없습니다.");
+            return;
+        }
+
+        StartCoroutine(PostAllFlashcardsCoroutine());
+    }
+
+    private IEnumerator PostAllFlashcardsCoroutine()
+    {
+        saveButton.interactable = false;
+
+        int questId = SceneContext.SelectedQuestId != 0 ? SceneContext.SelectedQuestId : 1;
+
+        foreach (string word in currentSuggestions)
+        {
+            string body = JsonUtility.ToJson(new FlashcardRequest
+            {
+                questId = questId,
+                word = word,
+                recommendationReason = currentFeedback
+            });
+
+            Debug.Log($"[FeedbackPopup] 플래시카드 저장 요청: word={word}, questId={questId}");
+
+            yield return StartCoroutine(PostCoroutine(BaseUrl + FlashcardsEndpoint, body,
+                onSuccess: (response) => Debug.Log($"[FeedbackPopup] 저장 성공: word={word}, response={response}"),
+                onFailure: (error) => Debug.LogError($"[FeedbackPopup] 저장 실패: word={word}, error={error}")
+            ));
+        }
+
+        saveButton.interactable = true;
+        saveIcon.sprite = successSaveIcon;
+    }
+
+    private IEnumerator PostCoroutine(string url, string bodyJson, System.Action<string> onSuccess, System.Action<string> onFailure)
+    {
+        byte[] bodyBytes = Encoding.UTF8.GetBytes(bodyJson);
+        string token = TokenStore.Instance.AccessToken.Trim();
+
+        using UnityWebRequest req = new UnityWebRequest(url, UnityWebRequest.kHttpVerbPOST);
+        req.uploadHandler = new UploadHandlerRaw(bodyBytes);
+        req.uploadHandler.contentType = "application/json";
+        req.downloadHandler = new DownloadHandlerBuffer();
+        req.SetRequestHeader("Authorization", $"Bearer {token}");
+        req.SetRequestHeader("Content-Type", "application/json");
+
+        yield return req.SendWebRequest();
+
+        if (req.result == UnityWebRequest.Result.Success)
+            onSuccess?.Invoke(req.downloadHandler.text);
+        else
+            onFailure?.Invoke($"[{req.responseCode}] {req.error} — {req.downloadHandler.text}");
     }
 }
