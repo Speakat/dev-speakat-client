@@ -86,3 +86,11 @@ public class QuestResult
     public List<string> achievedObjectives;
     public bool isQuestSuccess;
 }
+
+[System.Serializable]
+public class FlashcardRequest
+{
+    public int questId;
+    public string word;
+    public string recommendationReason;
+}

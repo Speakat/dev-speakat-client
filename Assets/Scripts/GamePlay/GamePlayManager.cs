@@ -30,6 +30,9 @@ public class GamePlayManager : MonoBehaviour
 
     private bool isCompleted = false;
     public bool isAudioPlaying = false;
+    private bool isSubmittingSpeech = false;
+
+    [SerializeField] private StageReactionController stageReactionController;
 
     QuestResult questResult;
 
@@ -47,7 +50,17 @@ public class GamePlayManager : MonoBehaviour
         }
     }
 
+    [SerializeField] private bool startSessionOnSceneStart = false;
+
+    // NPC 클릭 - 플레이어 이동 - 카메라 전환 후 세션 시작되도록 수정
     private async void Start()
+    {
+        if (startSessionOnSceneStart)
+            await GameSessionStartAsync();
+    }
+
+    // NPC 도착 후 호출
+    public async void StartQuestSessionFromNpc()
     {
         await GameSessionStartAsync();
     }
@@ -80,28 +93,71 @@ public class GamePlayManager : MonoBehaviour
 
     private IEnumerator CoWaitForAudioClipPlay(float clipLength)
     {
-        //Debug.Log($"NPC 오디오 재생 대기 시작: {clipLength}초");
         yield return new WaitForSeconds(clipLength);
-        recordButton.SetRecordActive();
+
         isAudioPlaying = false;
+
         if (isCompleted)
         {
+            if (recordButton != null)
+                recordButton.SetRecordInactive();
+
             SetResultUI(questResult);
+        }
+        else
+        {
+            if (recordButton != null)
+                recordButton.SetRecordActive();
         }
     }
 
     public async void HandleRecordingCompletedWithBase64(string base64Wav)
     {
+        if (isCompleted)
+        {
+            Debug.LogWarning("[GamePlayManager] 이미 완료된 세션이라 음성 제출을 무시합니다.");
+            return;
+        }
+
+        if (isSubmittingSpeech)
+        {
+            Debug.LogWarning("[GamePlayManager] 이미 음성 제출 중이라 중복 제출을 무시합니다.");
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(sessionId))
+        {
+            Debug.LogError("[GamePlayManager] sessionId가 없어 음성 제출을 중단합니다. 세션 시작 성공 여부를 확인하세요.");
+
+            if (recordButton != null)
+                recordButton.SetRecordActive();
+
+            return;
+        }
+
         try
         {
+            isSubmittingSpeech = true;
+
+            Debug.Log($"[GamePlayManager] 음성 제출 시작, base64Length={base64Wav?.Length}");
+
             string json = await PostSpeechAsync(base64Wav);
+
+            Debug.Log($"[GamePlayManager] speech response={json}");
+
             TurnResponse response = JsonUtility.FromJson<TurnResponse>(json);
             HandleTurnResponse(response);
         }
         catch (System.Exception e)
         {
             Debug.LogError($"[GamePlayManager] speech 제출 실패: {e.Message}");
-            recordButton.SetRecordActive();
+
+            if (!isCompleted && recordButton != null)
+                recordButton.SetRecordActive();
+        }
+        finally
+        {
+            isSubmittingSpeech = false;
         }
     }
 
@@ -111,34 +167,92 @@ public class GamePlayManager : MonoBehaviour
 
         TurnData data = response.data;
 
+        Debug.Log($"[TurnEvaluation] userText='{data.userText}', npcDialogue='{data.npcDialogue}'");
         Debug.Log($"[TurnEvaluation] isTurnPassed: {data.isTurnPassed}, isQuestComplete: {data.turnEvaluation.isQuestComplete}");
-        Debug.Log($"[TurnEvaluation] progressObject: {string.Join(", ", data.turnEvaluation.objectiveProgress)}, achievedObjectives: {string.Join(", ", data.questResult.achievedObjectives)}");
 
+        string progress = data.turnEvaluation.objectiveProgress != null
+            ? string.Join(", ", data.turnEvaluation.objectiveProgress)
+            : "";
+
+        string achieved = data.questResult != null && data.questResult.achievedObjectives != null
+            ? string.Join(", ", data.questResult.achievedObjectives)
+            : "";
+
+        Debug.Log($"[TurnEvaluation] progressObject: {progress}, achievedObjectives: {achieved}");
+
+        // 실패 발화든 성공 발화든 사용자가 말한 문장은 먼저 표시
+        if (!string.IsNullOrWhiteSpace(data.userText))
+        {
+            SetAnswer(data.userText);
+        }
+
+        // 퀘스트 완료를 먼저 처리
+        if (data.turnEvaluation.isQuestComplete)
+        {
+            Debug.Log("[GamePlayManager] 퀘스트 완료!");
+
+            CompleteQuest();
+            questResult = data.questResult;
+
+            if (recordButton != null)
+                recordButton.SetRecordInactive();
+
+            if (stageReactionController != null && questResult != null)
+            {
+                if (questResult.isQuestSuccess)
+                    stageReactionController.PlayQuestSuccessReaction();
+                else
+                    stageReactionController.PlayQuestFailReaction();
+            }
+
+            // 마지막 NPC 대사가 있으면 표시
+            if (!string.IsNullOrWhiteSpace(data.npcDialogue))
+            {
+                SetQuestion(data.npcDialogue);
+            }
+
+            // 마지막 NPC 오디오가 있으면 재생
+            if (!string.IsNullOrWhiteSpace(data.npcDialogueAudio) && npcAudioController != null)
+            {
+                npcAudioController.StartCoroutine(npcAudioController.PlayAudioFromBase64(data.npcDialogueAudio));
+            }
+            else
+            {
+                SetResultUI(questResult);
+            }
+
+            return;
+        }
+
+        // 아직 퀘스트가 끝나지 않은 턴만 처리
         if (data.isTurnPassed)
         {
             turnCount++;
 
-            npcAudioController.StartCoroutine(npcAudioController.PlayAudioFromBase64(data.npcDialogueAudio));
+            if (stageReactionController != null)
+                stageReactionController.PlayTurnPassedReaction();
 
-            SetAnswer(data.userText);
-            SetQuestion(data.npcDialogue);
+            if (!string.IsNullOrWhiteSpace(data.npcDialogueAudio) && npcAudioController != null)
+                npcAudioController.StartCoroutine(npcAudioController.PlayAudioFromBase64(data.npcDialogueAudio));
+
+            if (!string.IsNullOrWhiteSpace(data.npcDialogue))
+                SetQuestion(data.npcDialogue);
         }
-        else if (data.turnEvaluation.betterSuggestions.Count == 0)
+        else if (data.turnEvaluation.betterSuggestions == null || data.turnEvaluation.betterSuggestions.Count == 0)
         {
+            if (stageReactionController != null)
+                stageReactionController.PlayTurnFailedReaction();
+
             failurePopup.ShowPopup();
             recordButton.SetRecordActive();
         }
         else
         {
+            if (stageReactionController != null)
+                stageReactionController.PlayTurnFailedReaction();
+
             feedbackPopup.SetFeedbackPopup(data.turnEvaluation.recommendationReason, data.turnEvaluation.betterSuggestions);
             recordButton.SetRecordActive();
-        }
-
-        if (data.turnEvaluation.isQuestComplete)
-        {
-            Debug.Log("[GamePlayManager] 퀘스트 완료!");
-            CompleteQuest();
-            questResult = data.questResult;
         }
     }
 
@@ -162,6 +276,8 @@ public class GamePlayManager : MonoBehaviour
         dialoguePanel.ClearPanels();
         //recordButton.SetRecordInactive();
 
+        Debug.Log($"[GamePlayManager] 세션 시작: stageId={stageId}, questId={questId}");
+
         try
         {
             string json = await PostSessionAsync(questId);
@@ -171,7 +287,17 @@ public class GamePlayManager : MonoBehaviour
             {
                 sessionId = response.data.sessionId;
                 dialogue = response.data.npcDialogue;
+
+                Debug.Log($"[GamePlayManager] 세션 시작 성공: sessionId={sessionId}, questId={questId}");
+
                 SetQuestion(response.data.npcDialogue);
+
+                if (recordButton != null)
+                    recordButton.SetRecordActive();
+            }
+            else
+            {
+                Debug.LogError("[GamePlayManager] 세션 시작 실패 응답");
             }
         }
         catch (System.Exception e)
@@ -198,20 +324,31 @@ public class GamePlayManager : MonoBehaviour
     private async Task<string> PostSessionAsync(int questId)
     {
         string url = "https://speakat.hyorim.shop" + SessionEndpoint;
-        //Debug.Log($"url: {url}");
-        string body = JsonUtility.ToJson(new SessionRequest { quest_id = 1 }); // 임시로 1로 설정 TODO: 변경
+        string body = JsonUtility.ToJson(new SessionRequest { quest_id = questId });
+
+        Debug.Log($"[GamePlayManager] PostSession url={url}, body={body}");
+
         return await PostAsync(url, body);
     }
 
     private async Task<string> PostSpeechAsync(string base64Wav)
     {
+        if (string.IsNullOrWhiteSpace(sessionId))
+        {
+            throw new System.Exception("[GamePlayManager] sessionId가 비어 있어 speech 요청을 보낼 수 없습니다.");
+        }
+
         string url = "https://speakat.hyorim.shop" + string.Format(SpeechEndpoint, sessionId);
         string body = JsonUtility.ToJson(new SpeechRequest
         {
-            quest_id = 1, // 임시로 1로 설정, TODO : 변경
+            quest_id = questId,
             turn = turnCount + 1,
             audio = base64Wav
         });
+
+        Debug.Log($"[GamePlayManager] PostSpeech url={url}");
+        Debug.Log($"[GamePlayManager] PostSpeech sessionId={sessionId}, questId={questId}, turn={turnCount + 1}");
+
         return await PostAsync(url, body);
     }
 

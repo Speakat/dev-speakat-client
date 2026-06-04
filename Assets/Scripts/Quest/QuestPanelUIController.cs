@@ -19,7 +19,7 @@ public class QuestPanelUIController : MonoBehaviour
     public int StageId { get; set; }
 
 
-    private const string BaseUrl = "http://speakat.hyorim.shop";
+    private const string BaseUrl = "https://speakat.hyorim.shop";
     private const string StageDetailEndpoint = "/stages/";
 
     private string stageDetailDummyData = @"
