@@ -1,44 +1,235 @@
 using System;
 using System.Collections;
-using System.Net.Http;
-using System.Net.Http.Headers;
+using System.Text;
 using System.Threading.Tasks;
 using UnityEngine;
+using UnityEngine.Networking;
 using Speakat.Client;
 
 public class AuthApi : MonoBehaviour
 {
-    [SerializeField] private string baseUrl = "https://speakat.hyorim.shop";
-    [SerializeField] private TokenStore tokenStore;
+    [SerializeField] private SpeakatApiProvider apiProvider;
 
-    private HttpClient httpClient;
-    private SpeakatClient client;
-
-    private void Awake()
+    private SpeakatClient Client
     {
-        httpClient = new HttpClient();
-
-        client = new SpeakatClient(httpClient)
+        get
         {
-            BaseUrl = baseUrl.TrimEnd('/') + "/"
+            if (apiProvider == null)
+                throw new Exception("[AuthApi] apiProvider가 연결되지 않았습니다.");
+
+            return apiProvider.Client;
+        }
+    }
+
+    public IEnumerator LoginWithOAuth(
+        string provider,
+        string authorizationCode,
+        Action<OAuthLoginResponse> onSuccess,
+        Action<string> onFail)
+    {
+        Debug.Log($"[AuthApi] LoginWithOAuth called. provider={provider}, platform={Application.platform}");
+
+#if UNITY_WEBGL && !UNITY_EDITOR
+        Debug.Log("[AuthApi] WebGL fallback path selected");
+        yield return LoginWithOAuthWebGL(provider, authorizationCode, onSuccess, onFail);
+#else
+        Debug.Log("[AuthApi] SDK path selected");
+
+        var request = new OAuthLoginRequestDto
+        {
+            AuthorizationCode = authorizationCode
         };
+
+        Debug.Log($"[AuthApi] POST auth/oauth/{provider}");
+
+        Task<ApiResponseOfOAuthLoginResponseDto> task =
+            Client.OauthAsync(provider, request);
+
+        yield return WaitTask(
+            task,
+            response => ValidateApiResponse(
+                response?.IsSuccess,
+                response?.Data,
+                response?.Code,
+                response?.Message,
+                "Login"
+            ),
+            response => onSuccess?.Invoke(ToLegacyOAuthLoginResponse(response)),
+            onFail
+        );
+#endif
     }
 
-    private void OnDestroy()
+    public IEnumerator RefreshToken(
+        string refreshToken,
+        Action<RefreshTokenResponse> onSuccess,
+        Action<string> onFail)
     {
-        httpClient?.Dispose();
-        httpClient = null;
-        client = null;
-    }
-
-    private void SetAuthorizationHeader(string accessToken)
-    {
-        httpClient.DefaultRequestHeaders.Authorization = null;
-
-        if (!string.IsNullOrWhiteSpace(accessToken))
+        var request = new RefreshTokenRequestDto
         {
-            httpClient.DefaultRequestHeaders.Authorization =
-                new AuthenticationHeaderValue("Bearer", accessToken);
+            RefreshToken = refreshToken
+        };
+
+        Debug.Log("[AuthApi] POST auth/refresh");
+
+        Task<ApiResponseOfRefreshTokenResponseDto> task =
+            Client.RefreshAsync(request);
+
+        yield return WaitTask(
+            task,
+            response => ValidateApiResponse(
+                response?.IsSuccess,
+                response?.Data,
+                response?.Code,
+                response?.Message,
+                "Refresh"
+            ),
+            response => onSuccess?.Invoke(ToLegacyRefreshTokenResponse(response)),
+            onFail
+        );
+    }
+
+    public IEnumerator CheckNickname(
+        string nickname,
+        Action<CheckNicknameResponse> onSuccess,
+        Action<string> onFail)
+    {
+        var request = new CheckNicknameRequestDto
+        {
+            Nickname = nickname
+        };
+
+        Debug.Log("[AuthApi] POST auth/check-nickname");
+
+        Task<ApiResponseOfCheckNicknameResponseDto> task =
+            Client.CheckNicknameAsync(request);
+
+        yield return WaitTask(
+            task,
+            response => ValidateApiResponse(
+                response?.IsSuccess,
+                response?.Data,
+                response?.Code,
+                response?.Message,
+                "CheckNickname"
+            ),
+            response => onSuccess?.Invoke(ToLegacyCheckNicknameResponse(response)),
+            onFail
+        );
+    }
+
+    public IEnumerator UpdateMyProfile(
+        string nickname,
+        Action<PatchUserResponse> onSuccess,
+        Action<string> onFail)
+    {
+        var request = new PatchUserRequestDto
+        {
+            Nickname = nickname,
+            ProfileImageKey = null
+        };
+
+        Debug.Log("[AuthApi] PATCH users/me");
+
+        Task<ApiResponseOfPatchUserResultDto> task =
+            Client.MePATCHAsync(request);
+
+        yield return WaitTask(
+            task,
+            response => ValidateApiResponse(
+                response?.IsSuccess,
+                response?.Data,
+                response?.Code,
+                response?.Message,
+                "UpdateMyProfile"
+            ),
+            response => onSuccess?.Invoke(ToLegacyPatchUserResponse(response)),
+            onFail
+        );
+    }
+
+    private IEnumerator LoginWithOAuthWebGL(
+        string provider,
+        string authorizationCode,
+        Action<OAuthLoginResponse> onSuccess,
+        Action<string> onFail)
+    {
+        string url = BuildUrl($"/auth/oauth/{provider}");
+
+        OAuthLoginRequest requestBody = new OAuthLoginRequest
+        {
+            authorizationCode = authorizationCode
+        };
+
+        string json = JsonUtility.ToJson(requestBody);
+
+        using (UnityWebRequest req = new UnityWebRequest(url, "POST"))
+        {
+            byte[] bodyRaw = Encoding.UTF8.GetBytes(json);
+
+            req.uploadHandler = new UploadHandlerRaw(bodyRaw);
+            req.downloadHandler = new DownloadHandlerBuffer();
+            req.SetRequestHeader("Content-Type", "application/json");
+            req.SetRequestHeader("Accept", "application/json");
+
+            Debug.Log($"[AuthApi:WebGL] POST {url}");
+            Debug.Log($"[AuthApi:WebGL] Body: {json}");
+
+            yield return req.SendWebRequest();
+
+            string responseText = req.downloadHandler != null
+                ? req.downloadHandler.text
+                : "";
+
+            Debug.Log($"[AuthApi:WebGL] Status: {req.responseCode}");
+            Debug.Log($"[AuthApi:WebGL] Response: {responseText}");
+
+            if (req.result != UnityWebRequest.Result.Success)
+            {
+                string error = $"HTTP {req.responseCode}: {req.error}\n{responseText}";
+                Debug.LogError($"[AuthApi:WebGL] Login Error: {error}");
+                onFail?.Invoke(error);
+                yield break;
+            }
+
+            OAuthLoginResponse response = null;
+
+            try
+            {
+                response = JsonUtility.FromJson<OAuthLoginResponse>(responseText);
+            }
+            catch (Exception e)
+            {
+                string error = $"Login response parse failed: {e.Message}\n{responseText}";
+                Debug.LogError($"[AuthApi:WebGL] {error}");
+                onFail?.Invoke(error);
+                yield break;
+            }
+
+            if (response == null)
+            {
+                onFail?.Invoke("[AuthApi:WebGL] Login response is null");
+                yield break;
+            }
+
+            if (!response.isSuccess)
+            {
+                string message = string.IsNullOrEmpty(response.message)
+                    ? "Login failed"
+                    : response.message;
+
+                Debug.LogError($"[AuthApi:WebGL] API Fail: code={response.code}, message={message}");
+                onFail?.Invoke(message);
+                yield break;
+            }
+
+            if (response.data == null)
+            {
+                onFail?.Invoke("[AuthApi:WebGL] Login success but data is null");
+                yield break;
+            }
+
+            onSuccess?.Invoke(response);
         }
     }
 
@@ -77,156 +268,6 @@ public class AuthApi : MonoBehaviour
         onSuccess?.Invoke(result);
     }
 
-    private string ToErrorMessage(Exception exception)
-    {
-        Exception root = exception?.GetBaseException();
-
-        if (root is ApiException apiException)
-        {
-            return $"HTTP {apiException.StatusCode}: {apiException.Message}\n{apiException.Response}";
-        }
-
-        return root != null ? root.Message : "Unknown error";
-    }
-
-    public IEnumerator LoginWithOAuth(
-        string provider,
-        string authorizationCode,
-        Action<OAuthLoginResponse> onSuccess,
-        Action<string> onFail)
-    {
-        SetAuthorizationHeader(null);
-
-        var request = new OAuthLoginRequestDto
-        {
-            AuthorizationCode = authorizationCode
-        };
-
-        Debug.Log($"[AuthApi] POST {client.BaseUrl}auth/oauth/{provider}");
-
-        Task<ApiResponseOfOAuthLoginResponseDto> task =
-            client.OauthAsync(provider, request);
-
-        yield return WaitTask(
-            task,
-            response => ValidateApiResponse(
-                response?.IsSuccess,
-                response?.Data,
-                response?.Code,
-                response?.Message,
-                "Login"
-            ),
-            response => onSuccess?.Invoke(ToLegacyOAuthLoginResponse(response)),
-            onFail
-        );
-    }
-
-    public IEnumerator RefreshToken(
-        string refreshToken,
-        Action<RefreshTokenResponse> onSuccess,
-        Action<string> onFail)
-    {
-        SetAuthorizationHeader(null);
-
-        var request = new RefreshTokenRequestDto
-        {
-            RefreshToken = refreshToken
-        };
-
-        Debug.Log($"[AuthApi] POST {client.BaseUrl}auth/refresh");
-
-        Task<ApiResponseOfRefreshTokenResponseDto> task =
-            client.RefreshAsync(request);
-
-        yield return WaitTask(
-            task,
-            response => ValidateApiResponse(
-                response?.IsSuccess,
-                response?.Data,
-                response?.Code,
-                response?.Message,
-                "Refresh"
-            ),
-            response => onSuccess?.Invoke(ToLegacyRefreshTokenResponse(response)),
-            onFail
-        );
-    }
-
-    public IEnumerator CheckNickname(
-        string nickname,
-        Action<CheckNicknameResponse> onSuccess,
-        Action<string> onFail)
-    {
-        string accessToken = tokenStore != null ? tokenStore.AccessToken : null;
-        SetAuthorizationHeader(accessToken);
-
-        if (string.IsNullOrWhiteSpace(accessToken))
-        {
-            Debug.LogWarning("[AuthApi] accessToken is empty. Authorization header was not attached to CheckNickname.");
-        }
-
-        var request = new CheckNicknameRequestDto
-        {
-            Nickname = nickname
-        };
-
-        Debug.Log($"[AuthApi] POST {client.BaseUrl}auth/check-nickname");
-
-        Task<ApiResponseOfCheckNicknameResponseDto> task =
-            client.CheckNicknameAsync(request);
-
-        yield return WaitTask(
-            task,
-            response => ValidateApiResponse(
-                response?.IsSuccess,
-                response?.Data,
-                response?.Code,
-                response?.Message,
-                "CheckNickname"
-            ),
-            response => onSuccess?.Invoke(ToLegacyCheckNicknameResponse(response)),
-            onFail
-        );
-    }
-
-    public IEnumerator UpdateMyProfile(
-        string nickname,
-        Action<PatchUserResponse> onSuccess,
-        Action<string> onFail)
-    {
-        string accessToken = tokenStore != null ? tokenStore.AccessToken : null;
-        SetAuthorizationHeader(accessToken);
-
-        if (string.IsNullOrWhiteSpace(accessToken))
-        {
-            Debug.LogWarning("[AuthApi] accessToken is empty. Authorization header was not attached to UpdateMyProfile.");
-        }
-
-        var request = new PatchUserRequestDto
-        {
-            Nickname = nickname,
-            ProfileImageKey = null
-        };
-
-        Debug.Log($"[AuthApi] PATCH {client.BaseUrl}users/me");
-
-        Task<ApiResponseOfPatchUserResultDto> task =
-            client.MePATCHAsync(request);
-
-        yield return WaitTask(
-            task,
-            response => ValidateApiResponse(
-                response?.IsSuccess,
-                response?.Data,
-                response?.Code,
-                response?.Message,
-                "UpdateMyProfile"
-            ),
-            response => onSuccess?.Invoke(ToLegacyPatchUserResponse(response)),
-            onFail
-        );
-    }
-
     private string ValidateApiResponse(
         bool? isSuccess,
         object data,
@@ -247,6 +288,25 @@ public class AuthApi : MonoBehaviour
         }
 
         return null;
+    }
+
+    private string ToErrorMessage(Exception exception)
+    {
+        Exception root = exception?.GetBaseException();
+
+        if (root is ApiException apiException)
+        {
+            return $"HTTP {apiException.StatusCode}: {apiException.Message}\n{apiException.Response}";
+        }
+
+        return root != null ? root.Message : "Unknown error";
+    }
+
+    private string BuildUrl(string path)
+    {
+        string root = "https://speakat.hyorim.shop";
+        string p = path.StartsWith("/") ? path : "/" + path;
+        return root.TrimEnd('/') + p;
     }
 
     private OAuthLoginResponse ToLegacyOAuthLoginResponse(

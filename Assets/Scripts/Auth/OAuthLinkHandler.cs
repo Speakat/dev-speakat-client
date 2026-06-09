@@ -67,22 +67,21 @@ public class OAuthLinkHandler : MonoBehaviour
 
     private string ExtractProvider(Uri uri)
     {
+        // speakat://oauth/google?code=xxx
         string path = uri.AbsolutePath.Trim('/').ToLower();
+        string[] segments = path.Split('/');
+        string lastSegment = segments[segments.Length - 1];
 
-        if (path == "google")
-            return "google";
+        if (lastSegment == "google") return "google";
+        if (lastSegment == "kakao") return "kakao";
 
-        if (path == "kakao")
-            return "kakao";
-
+        // host 기반 fallback: speakat://google?code=xxx 형태
         string host = uri.Host.ToLower();
 
-        if (host == "google")
-            return "google";
+        if (host == "google") return "google";
+        if (host == "kakao") return "kakao";
 
-        if (host == "kakao")
-            return "kakao";
-
+        Debug.LogWarning($"[OAuthLinkHandler] provider를 추출할 수 없습니다. path={path}, host={host}");
         return null;
     }
 
@@ -92,7 +91,7 @@ public class OAuthLinkHandler : MonoBehaviour
         if (query.StartsWith("?")) query = query.Substring(1);
 
         var pairs = query.Split('&', StringSplitOptions.RemoveEmptyEntries);
-        foreach ( var pair in pairs)
+        foreach (var pair in pairs)
         {
             var kv = pair.Split('=', 2);
             if (kv.Length == 2 && kv[0] == key)
