@@ -212,7 +212,8 @@ public class MyPageView : MonoBehaviour
             {
                 profileImageUrl = profile.profileImageUrl,
                 nickname = profile.nickname ?? "학습자",
-                currentCourse = ConvertEnglishLevel(profile.englishLevel),
+                // currentCourse = ConvertEnglishLevel(profile.englishLevel),
+                currentCourse = GetLearningLevelText(stats),
 
                 currentStreak = streak.CurrentStreak.GetValueOrDefault(),
 
@@ -368,6 +369,33 @@ public class MyPageView : MonoBehaviour
             return Mathf.RoundToInt((float)averageScore.Value);
 
         return 0;
+    }
+
+    private string GetLearningLevelText(MyStatsData stats)
+    {
+        if (stats == null)
+            return "학습 통계 없음";
+
+        int meaning = GetScore(stats.semanticScore, stats.avgSemanticScore);
+        int grammar = GetScore(stats.grammarScore, stats.avgGrammarScore);
+        int naturalness = GetScore(stats.naturalnessScore, stats.avgNaturalnessScore);
+
+        string meaningLevel = ConvertScoreToLevel(meaning);
+        string grammarLevel = ConvertScoreToLevel(grammar);
+        string naturalnessLevel = ConvertScoreToLevel(naturalness);
+
+        return $"의미 {meaningLevel} · 문법 {grammarLevel} · 자연스러움 {naturalnessLevel}";
+    }
+
+    private string ConvertScoreToLevel(int score)
+    {
+        if (score >= 80)
+            return "상";
+
+        if (score >= 50)
+            return "중";
+
+        return "하";
     }
 
     public void UpdateUI(MyPageData data)
