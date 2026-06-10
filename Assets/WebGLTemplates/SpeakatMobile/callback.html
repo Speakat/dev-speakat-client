@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>OAuth Callback</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      text-align: center;
+      padding: 40px 20px;
+    }
+
+    #fallback {
+      display: none;
+    }
+
+    button {
+      font-size: 18px;
+      padding: 12px 20px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div id="fallback">
+    <p>앱으로 자동 이동하지 않으면 아래 버튼을 눌러주세요.</p>
+    <button id="openAppBtn">앱으로 돌아가기</button>
+  </div>
+
+  <script>
+    const params = new URLSearchParams(window.location.search);
+
+    const code = params.get("code");
+    const error = params.get("error");
+    const state = params.get("state"); // google 또는 kakao
+    const provider = state || "unknown";
+
+    const fallback = document.getElementById("fallback");
+    const openAppBtn = document.getElementById("openAppBtn");
+
+    if (error) {
+      fallback.style.display = "block";
+      fallback.innerHTML = "<p>로그인에 실패했습니다. 앱으로 돌아가 다시 시도해주세요.</p>";
+      console.error("[OAuth Callback] error:", error);
+    } else if (!code) {
+      fallback.style.display = "block";
+      fallback.innerHTML = "<p>로그인 정보를 확인할 수 없습니다. 앱으로 돌아가 다시 시도해주세요.</p>";
+      console.error("[OAuth Callback] code 없음");
+    } else {
+      const payload = provider + ":" + code;
+      const deepLink = "speakat://oauth/" + provider + "?code=" + encodeURIComponent(code);
+
+      console.log("[OAuth Callback] provider:", provider);
+      console.log("[OAuth Callback] deepLink:", deepLink);
+
+      // WebGL 팝업 방식
+      if (window.opener && !window.opener.closed) {
+        window.opener.postMessage(
+          {
+            type: "OAUTH_CODE",
+            payload: payload,
+            provider: provider,
+            code: code
+          },
+          "*"
+        );
+
+        setTimeout(() => window.close(), 300);
+      } 
+      // 모바일 앱 딥링크 방식
+      else {
+        openAppBtn.onclick = function () {
+          window.location.href = deepLink;
+        };
+
+        // 정상 상황에서는 바로 앱으로 이동
+        setTimeout(function () {
+          window.location.replace(deepLink);
+        }, 100);
+
+        // 자동 이동이 막혔을 때만 사용자에게 버튼 표시
+        setTimeout(function () {
+          fallback.style.display = "block";
+        }, 1500);
+      }
+    }
+  </script>
+</body>
+</html>

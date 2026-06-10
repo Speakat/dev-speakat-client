@@ -22,28 +22,66 @@ public class OAuthLinkHandler : MonoBehaviour
 
     private void HandleDeepLink(string url)
     {
-        Debug.Log($"Deep link received: {url}");
+        Debug.Log($"[OAuthLinkHandler] Deep link received: {url}");
 
-        Uri uri = new Uri(url);
+        if (string.IsNullOrWhiteSpace(url))
+        {
+            Debug.LogWarning("[OAuthLinkHandler] Empty deep link url.");
+            return;
+        }
+
+        Uri uri;
+
+        try
+        {
+            uri = new Uri(url);
+        }
+        catch (Exception e)
+        {
+            Debug.LogError($"[OAuthLinkHandler] Invalid deep link url: {url}, error={e.Message}");
+            return;
+        }
+
+        string error = GetQueryParam(uri.Query, "error");
+
+        if (!string.IsNullOrEmpty(error))
+        {
+            Debug.LogError($"[OAuthLinkHandler] OAuth error from deep link: {error}");
+            return;
+        }
+
         string code = GetQueryParam(uri.Query, "code");
-
         string provider = ExtractProvider(uri);
+
+        Debug.Log($"[OAuthLinkHandler] provider={provider}, hasCode={!string.IsNullOrEmpty(code)}");
 
         if (!string.IsNullOrEmpty(provider) && !string.IsNullOrEmpty(code))
         {
             OnAuthorizationCodeReceived?.Invoke(provider, code);
         }
+        else
+        {
+            Debug.LogWarning($"[OAuthLinkHandler] provider/code missing. provider={provider}, codeEmpty={string.IsNullOrEmpty(code)}");
+        }
     }
 
     private string ExtractProvider(Uri uri)
     {
-        string full = uri.AbsoluteUri.ToLower();
+        // speakat://oauth/google?code=xxx
+        string path = uri.AbsolutePath.Trim('/').ToLower();
+        string[] segments = path.Split('/');
+        string lastSegment = segments[segments.Length - 1];
 
-        if (full.Contains("/google") || full.Contains("google"))
-            return "google";
-        if (full.Contains("/kakao") || full.Contains("kakao"))
-            return "kakao";
+        if (lastSegment == "google") return "google";
+        if (lastSegment == "kakao") return "kakao";
 
+        // host 기반 fallback: speakat://google?code=xxx 형태
+        string host = uri.Host.ToLower();
+
+        if (host == "google") return "google";
+        if (host == "kakao") return "kakao";
+
+        Debug.LogWarning($"[OAuthLinkHandler] provider를 추출할 수 없습니다. path={path}, host={host}");
         return null;
     }
 
@@ -53,7 +91,7 @@ public class OAuthLinkHandler : MonoBehaviour
         if (query.StartsWith("?")) query = query.Substring(1);
 
         var pairs = query.Split('&', StringSplitOptions.RemoveEmptyEntries);
-        foreach ( var pair in pairs)
+        foreach (var pair in pairs)
         {
             var kv = pair.Split('=', 2);
             if (kv.Length == 2 && kv[0] == key)

@@ -4,12 +4,13 @@ public class TokenStore : MonoBehaviour
 {
     public static TokenStore Instance { get; private set; }
 
-    public string AccessToken { get; private set; }
-    public string RefreshToken { get; private set; }
+    public string UserId { get; private set; }
     public string Email { get; private set; }
     public string Nickname { get; private set; }
-    public string Provider { get; private set; }
     public string ProfileImageUrl { get; private set; }
+    public string Provider { get; private set; }
+    public string AccessToken { get; private set; }
+    public string RefreshToken { get; private set; }
     public bool IsNewUser { get; private set; }
 
     private void Awake()
@@ -26,28 +27,39 @@ public class TokenStore : MonoBehaviour
 
     public void SetLoginData(OAuthLoginData data)
     {
-        AccessToken = data.accessToken;
-        RefreshToken = data.refreshToken;
+        if (data == null)
+        {
+            Debug.LogError("[TokenStore] SetLoginData failed: data is null.");
+            return;
+        }
+
+        UserId = data.userId;
         Email = data.email;
         Nickname = data.nickname;
-        Provider = data.provider;
         ProfileImageUrl = data.profileImageUrl;
+        Provider = data.provider;
+        AccessToken = data.accessToken;
+        RefreshToken = data.refreshToken;
         IsNewUser = data.isNewUser;
+
+        Debug.Log($"[TokenStore] Login data saved. userId={UserId}, nickname={Nickname}, provider={Provider}");
     }
 
-    public bool HasAccessToken()
+    public void SetTokens(string accessToken, string refreshToken)
     {
-        return !string.IsNullOrEmpty(AccessToken);
+        AccessToken = accessToken;
+        RefreshToken = refreshToken;
     }
 
     public void Clear()
     {
-        AccessToken = null;
-        RefreshToken = null;
+        UserId = null;
         Email = null;
         Nickname = null;
-        Provider = null;
         ProfileImageUrl = null;
+        Provider = null;
+        AccessToken = null;
+        RefreshToken = null;
         IsNewUser = false;
     }
 }

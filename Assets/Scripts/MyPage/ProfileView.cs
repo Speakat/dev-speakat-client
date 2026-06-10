@@ -38,14 +38,14 @@ public class ProfileView : MonoBehaviour
     private string FormatNickname(string nickname)
     {
         if (string.IsNullOrWhiteSpace(nickname))
-            return "ÇĞ½ÀÀÚ ´Ô";
+            return "í•™ìŠµì ë‹˜";
 
         string displayName = nickname.Trim();
 
         if (displayName.Length > 12)
             displayName = displayName.Substring(0, 12) + "...";
 
-        return $"{displayName} ´Ô";
+        return $"{displayName} ë‹˜";
     }
 
     private void SetDefaultProfileImage()
@@ -55,6 +55,8 @@ public class ProfileView : MonoBehaviour
 
         if (defaultProfileSprite != null)
             profilePic.sprite = defaultProfileSprite;
+
+        profilePic.preserveAspect = true;
     }
 
     private IEnumerator LoadProfileImage(string url)
@@ -65,7 +67,7 @@ public class ProfileView : MonoBehaviour
 
             if (uwr.result != UnityWebRequest.Result.Success)
             {
-                Debug.LogWarning($"[ProfileView] ÇÁ·ÎÇÊ ÀÌ¹ÌÁö ·Îµå ½ÇÆĞ: {uwr.error}");
+                Debug.LogWarning($"[ProfileView] í”„ë¡œí•„ ì´ë¯¸ì§€ ë¡œë“œ ì‹¤íŒ¨: {uwr.error}");
                 SetDefaultProfileImage();
                 yield break;
             }
@@ -74,7 +76,7 @@ public class ProfileView : MonoBehaviour
 
             if (texture == null)
             {
-                Debug.LogWarning("[ProfileView] ÇÁ·ÎÇÊ ÀÌ¹ÌÁö texture°¡ nullÀÔ´Ï´Ù.");
+                Debug.LogWarning("[ProfileView] í”„ë¡œí•„ ì´ë¯¸ì§€ textureê°€ nullì…ë‹ˆë‹¤.");
                 SetDefaultProfileImage();
                 yield break;
             }
@@ -86,7 +88,10 @@ public class ProfileView : MonoBehaviour
             );
 
             if (profilePic != null)
+            {
                 profilePic.sprite = sprite;
+                profilePic.preserveAspect = true;
+            }
         }
     }
 }
