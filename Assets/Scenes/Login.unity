@@ -985,6 +985,7 @@ GameObject:
   - component: {fileID: 411056537}
   - component: {fileID: 411056539}
   - component: {fileID: 411056540}
+  - component: {fileID: 411056541}
   m_Layer: 0
   m_Name: AuthSystem
   m_TagString: Untagged
@@ -1038,9 +1039,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::WebViewOAuthService
   googleClientId: 358666565391-nbats8o0q0bamfstt5590bgjug3qgbp3.apps.googleusercontent.com
-  googleRedirectUri: speakat://oauth/google
+  googleRedirectUri: https://speakatweb.hyorim.shop/callback.html
   kakaoRestApiKey: 65b40e5bbe648253ff7eacda948dc9fd
-  kakaoRedirectUri: speakat://oauth/kakao
+  kakaoRedirectUri: https://speakatweb.hyorim.shop/callback.html
   webGLRedirectUri: https://speakatweb.hyorim.shop/callback.html
 --- !u!114 &411056538
 MonoBehaviour:
@@ -1054,8 +1055,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d40010dbd3587484aac6764dfc3882e9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::AuthApi
-  baseUrl: https://speakat.hyorim.shop
-  tokenStore: {fileID: 411056540}
+  apiProvider: {fileID: 411056541}
 --- !u!114 &411056539
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1080,6 +1080,20 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ed2c4abd2803ff3438433380ecc0eafe, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TokenStore
+--- !u!114 &411056541
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 411056533}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ae8d48dfafb017d42b59e30bba4be283, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SpeakatApiProvider
+  baseUrl: https://speakat.hyorim.shop/
+  debugAccessToken: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI0N2EzN2Q4ZS1hYTQ5LTRlMzItOGRmMC04NzJmZDE5N2U0NzAiLCJpYXQiOjE3NDg1NjMyMDAsImV4cCI6OTk5OTk5OTk5OX0.OVBxI96G65YqG221phZKUF3Pb7G8DO9ODewmzIPX1cc
 --- !u!1 &411083944
 GameObject:
   m_ObjectHideFlags: 0
@@ -1349,8 +1363,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d40010dbd3587484aac6764dfc3882e9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::AuthApi
-  baseUrl: https://your-api-domain.com
-  tokenStore: {fileID: 0}
+  apiProvider: {fileID: 0}
 --- !u!114 &559614872
 MonoBehaviour:
   m_ObjectHideFlags: 0

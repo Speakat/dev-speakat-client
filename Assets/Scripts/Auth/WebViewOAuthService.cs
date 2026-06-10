@@ -55,8 +55,11 @@ public class WebViewOAuthService : MonoBehaviour
         string currentKakaoRedirectUri = kakaoRedirectUri;
 
 #if UNITY_WEBGL && !UNITY_EDITOR
-        currentGoogleRedirectUri = webGLRedirectUri;
-        currentKakaoRedirectUri = webGLRedirectUri;
+    currentGoogleRedirectUri = webGLRedirectUri;
+    currentKakaoRedirectUri = webGLRedirectUri;
+#elif UNITY_ANDROID && !UNITY_EDITOR
+    currentGoogleRedirectUri = webGLRedirectUri;
+    currentKakaoRedirectUri = webGLRedirectUri;
 #endif
 
         string encodedState = Uri.EscapeDataString(provider);
