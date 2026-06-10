@@ -53,6 +53,8 @@ public class RecordButtonController : MonoBehaviour
         _buttonImage = recordButton.GetComponent<Image>();
         recordButton.onClick.AddListener(OnRecordButtonClicked);
         RequestMicrophonePermission();
+
+        SetRecordInactive();
     }
 
     void OnRecordButtonClicked()

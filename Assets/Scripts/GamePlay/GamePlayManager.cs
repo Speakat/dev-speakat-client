@@ -387,7 +387,10 @@ public class GamePlayManager : MonoBehaviour
         yield return req.SendWebRequest();
 
         if (req.result == UnityWebRequest.Result.Success)
+        {
             tcs.SetResult(req.downloadHandler.text);
+            recordButton.SetRecordActive();
+        }
         else
             tcs.SetException(new System.Exception($"[{req.responseCode}] {req.error} — {req.downloadHandler.text}"));
     }
