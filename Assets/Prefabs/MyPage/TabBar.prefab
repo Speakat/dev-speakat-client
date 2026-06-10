@@ -56,9 +56,9 @@ MonoBehaviour:
     m_SelectOnDown: {fileID: 0}
     m_SelectOnLeft: {fileID: 0}
     m_SelectOnRight: {fileID: 0}
-  m_Transition: 1
+  m_Transition: 0
   m_Colors:
-    m_NormalColor: {r: 0.6666667, g: 0.6666667, b: 0.6666667, a: 1}
+    m_NormalColor: {r: 1, g: 1, b: 1, a: 1}
     m_HighlightedColor: {r: 0.95686275, g: 0.56078434, b: 0.09019608, a: 1}
     m_PressedColor: {r: 0.95686275, g: 0.56078434, b: 0.09019608, a: 1}
     m_SelectedColor: {r: 0.95686275, g: 0.56078434, b: 0.09019608, a: 1}
@@ -176,7 +176,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &7546527090618237111
 RectTransform:
   m_ObjectHideFlags: 0
@@ -408,6 +408,7 @@ GameObject:
   - component: {fileID: 4508167616554162738}
   - component: {fileID: 3802365157235556225}
   - component: {fileID: 5198253099873289307}
+  - component: {fileID: 3588153375490942020}
   m_Layer: 5
   m_Name: TabBar
   m_TagString: Untagged
@@ -490,8 +491,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.HorizontalLayoutGroup
   m_Padding:
-    m_Left: 40
-    m_Right: 40
+    m_Left: 150
+    m_Right: 150
     m_Top: 0
     m_Bottom: 0
   m_ChildAlignment: 7
@@ -515,7 +516,23 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2fafe2cfe61f6974895a912c3755e8f1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.ToggleGroup
-  m_AllowSwitchOff: 0
+  m_AllowSwitchOff: 1
+--- !u!114 &3588153375490942020
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3096592607709375204}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b09c2f6e6ddf2bd47b01dd7a99670122, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TabBarController
+  questToggle: {fileID: 6496515500159179386}
+  vocaToggle: {fileID: 6499631350844119931}
+  myPageToggle: {fileID: 2415392092974814578}
+  tabBarUI: {fileID: 0}
 --- !u!1 &3163831422117550432
 GameObject:
   m_ObjectHideFlags: 0
@@ -534,7 +551,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &8973408158850240834
 RectTransform:
   m_ObjectHideFlags: 0
@@ -781,9 +798,9 @@ MonoBehaviour:
     m_SelectOnDown: {fileID: 0}
     m_SelectOnLeft: {fileID: 0}
     m_SelectOnRight: {fileID: 0}
-  m_Transition: 1
+  m_Transition: 0
   m_Colors:
-    m_NormalColor: {r: 0.95686275, g: 0.56078434, b: 0.09019608, a: 1}
+    m_NormalColor: {r: 0.6603774, g: 0.6603774, b: 0.6603774, a: 1}
     m_HighlightedColor: {r: 0.95686275, g: 0.56078434, b: 0.09019608, a: 1}
     m_PressedColor: {r: 0.95686275, g: 0.56078434, b: 0.09019608, a: 1}
     m_SelectedColor: {r: 0.95686275, g: 0.56078434, b: 0.09019608, a: 1}
@@ -817,7 +834,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 5205345028098717112}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: c636cd7b92c2bbe4997f66835c5c235d, type: 3}
   m_Name: 
@@ -838,7 +855,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &2864472150629274932
 RectTransform:
   m_ObjectHideFlags: 0
@@ -963,9 +980,9 @@ MonoBehaviour:
     m_SelectOnDown: {fileID: 0}
     m_SelectOnLeft: {fileID: 0}
     m_SelectOnRight: {fileID: 0}
-  m_Transition: 1
+  m_Transition: 0
   m_Colors:
-    m_NormalColor: {r: 0.6666667, g: 0.6666667, b: 0.6666667, a: 1}
+    m_NormalColor: {r: 1, g: 1, b: 1, a: 1}
     m_HighlightedColor: {r: 0.95686275, g: 0.56078434, b: 0.09019608, a: 1}
     m_PressedColor: {r: 0.95686275, g: 0.56078434, b: 0.09019608, a: 1}
     m_SelectedColor: {r: 0.95686275, g: 0.56078434, b: 0.09019608, a: 1}
