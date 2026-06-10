@@ -17,6 +17,8 @@ public class WordData
     public bool isBookmarked;        // 즐겨찾기(북마크) 여부
 
     public string audioUrl;
+
+    public string savedAt;
 }
 
 [System.Serializable]
