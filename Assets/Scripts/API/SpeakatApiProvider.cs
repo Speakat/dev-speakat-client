@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using UnityEngine;
@@ -11,6 +11,10 @@ public class SpeakatApiProvider : MonoBehaviour
 
     private HttpClient httpClient;
     private SpeakatClient client;
+
+    public string ApiBaseUrl => client != null ? client.BaseUrl : NormalizeBaseUrl(baseUrl);
+
+    public string AccessTokenForRequest => ResolveAccessToken();
 
     public SpeakatClient Client
     {
@@ -56,14 +60,31 @@ public class SpeakatApiProvider : MonoBehaviour
         Debug.Log($"[SpeakatApiProvider] HttpClient.BaseAddress={httpClient.BaseAddress}");
     }
 
-    private string NormalizeBaseUrl(string url)
+    private string NormalizeBaseUrl(string rawBaseUrl)
     {
+        string url = rawBaseUrl;
+
         if (string.IsNullOrWhiteSpace(url))
         {
-            return "https://speakat.hyorim.shop/";
+            url = "https://speakat.hyorim.shop/";
         }
 
-        return url.EndsWith("/") ? url : url + "/";
+        url = url.Trim()
+            .Replace("\r", "")
+            .Replace("\n", "")
+            .Replace("\t", "");
+
+        if (!url.StartsWith("http://") && !url.StartsWith("https://"))
+        {
+            url = "https://" + url;
+        }
+
+        if (!url.EndsWith("/"))
+        {
+            url += "/";
+        }
+
+        return url;
     }
 
     private string ResolveAccessToken()
@@ -94,6 +115,7 @@ public class SpeakatApiProvider : MonoBehaviour
     {
         if (httpClient == null)
         {
+            CreateClient();
             return;
         }
 

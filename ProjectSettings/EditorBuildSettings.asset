@@ -32,6 +32,15 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/MyPage.unity
     guid: ee117b9a8abe8cb40a351c55bcc106ba
+  - enabled: 1
+    path: Assets/Scenes/StageScene.unity
+    guid: 3dd7ad03fba303e43bf1c555a7e81279
+  - enabled: 1
+    path: Assets/Scenes/QuestScene.unity
+    guid: 8ea1fbf4f36ff814cb0e1a565b3979c3
+  - enabled: 1
+    path: Assets/Scenes/GamePlayScene.unity
+    guid: 235ab9fc7fc68394f8e47a50eee6085f
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
   m_UseUCBPForAssetBundles: 0

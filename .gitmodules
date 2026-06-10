@@ -1,0 +1,3 @@
+[submodule "Assets/Plugins/SpeakatClient"]
+	path = Assets/Plugins/SpeakatClient
+	url = https://github.com/Speakat/speakat-unity-sdk

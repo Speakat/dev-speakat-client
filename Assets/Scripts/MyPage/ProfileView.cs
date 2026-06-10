@@ -8,24 +8,58 @@ public class ProfileView : MonoBehaviour
 {
     [SerializeField] private Image profilePic;
     [SerializeField] private TMP_Text nicknameText;
-    //[SerializeField] private TMP_Text levelText;
     [SerializeField] private TMP_Text courseText;
-    //[SerializeField] private Slider expProgressBar;
+
+    [Header("Profile Image")]
+    [SerializeField] private Sprite defaultProfileSprite;
+
+    private Coroutine profileImageCoroutine;
 
     public void Setup(string nickname, string course, string url)
     {
-        if (nicknameText != null) nicknameText.text = $"{nickname} ´Ô";
-        //levelText.text = $"Lv.{data.level}";
-        if (courseText != null) courseText.text = course;
-        //expProgressBar.value = data.expProgress;
+        if (nicknameText != null)
+            nicknameText.text = FormatNickname(nickname);
 
-        Debug.Log($"[ProfileView] Setup nickname={nickname}, profileImageUrl={url}");
+        if (courseText != null)
+            courseText.text = course;
 
-        if (!string.IsNullOrEmpty(url))
-            StartCoroutine(LoadProfileImage(url));
+        SetDefaultProfileImage();
+
+        if (profileImageCoroutine != null)
+        {
+            StopCoroutine(profileImageCoroutine);
+            profileImageCoroutine = null;
+        }
+
+        if (!string.IsNullOrWhiteSpace(url))
+            profileImageCoroutine = StartCoroutine(LoadProfileImage(url));
     }
 
-    IEnumerator LoadProfileImage(string url)
+    private string FormatNickname(string nickname)
+    {
+        if (string.IsNullOrWhiteSpace(nickname))
+            return "í•™ìŠµì ë‹˜";
+
+        string displayName = nickname.Trim();
+
+        if (displayName.Length > 12)
+            displayName = displayName.Substring(0, 12) + "...";
+
+        return $"{displayName} ë‹˜";
+    }
+
+    private void SetDefaultProfileImage()
+    {
+        if (profilePic == null)
+            return;
+
+        if (defaultProfileSprite != null)
+            profilePic.sprite = defaultProfileSprite;
+
+        profilePic.preserveAspect = true;
+    }
+
+    private IEnumerator LoadProfileImage(string url)
     {
         using (UnityWebRequest uwr = UnityWebRequestTexture.GetTexture(url))
         {
@@ -33,21 +67,31 @@ public class ProfileView : MonoBehaviour
 
             if (uwr.result != UnityWebRequest.Result.Success)
             {
-                Debug.LogError($"[ProfileView] ÇÁ·ÎÇÊ ÀÌ¹ÌÁö ·Îµå ½ÇÆĞ: {uwr.responseCode} / {uwr.error}");
+                Debug.LogWarning($"[ProfileView] í”„ë¡œí•„ ì´ë¯¸ì§€ ë¡œë“œ ì‹¤íŒ¨: {uwr.error}");
+                SetDefaultProfileImage();
                 yield break;
             }
 
             Texture2D texture = DownloadHandlerTexture.GetContent(uwr);
 
-            profilePic.sprite = Sprite.Create(
+            if (texture == null)
+            {
+                Debug.LogWarning("[ProfileView] í”„ë¡œí•„ ì´ë¯¸ì§€ textureê°€ nullì…ë‹ˆë‹¤.");
+                SetDefaultProfileImage();
+                yield break;
+            }
+
+            Sprite sprite = Sprite.Create(
                 texture,
                 new Rect(0, 0, texture.width, texture.height),
                 new Vector2(0.5f, 0.5f)
             );
 
-            profilePic.preserveAspect = true;
-
-            Debug.Log("[ProfileView] ÇÁ·ÎÇÊ ÀÌ¹ÌÁö ·Îµå ¼º°ø");
+            if (profilePic != null)
+            {
+                profilePic.sprite = sprite;
+                profilePic.preserveAspect = true;
+            }
         }
     }
 }
