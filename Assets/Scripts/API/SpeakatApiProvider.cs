@@ -25,6 +25,7 @@ public class SpeakatApiProvider : MonoBehaviour
                 CreateClient();
             }
 
+            RefreshAuthHeader();
             return client;
         }
     }
@@ -36,29 +37,24 @@ public class SpeakatApiProvider : MonoBehaviour
 
     private void CreateClient()
     {
-        httpClient?.Dispose();
+        if (httpClient != null && client != null)
+        {
+            return;
+        }
 
         string normalizedBaseUrl = NormalizeBaseUrl(baseUrl);
 
-        httpClient = new HttpClient();
-        httpClient.BaseAddress = new Uri(normalizedBaseUrl);
-
-        string accessToken = ResolveAccessToken();
-
-        if (!string.IsNullOrEmpty(accessToken))
+        httpClient = new HttpClient
         {
-            httpClient.DefaultRequestHeaders.Authorization =
-                new AuthenticationHeaderValue("Bearer", accessToken);
+            BaseAddress = new Uri(normalizedBaseUrl)
+        };
 
-            Debug.Log("[SpeakatApiProvider] Authorization Bearer token Àû¿ë ¿Ï·á");
-        }
-        else
+        client = new SpeakatClient(httpClient)
         {
-            Debug.LogWarning("[SpeakatApiProvider] AccessTokenÀÌ ¾ø½À´Ï´Ù. ºñ·Î±×ÀÎ »óÅÂ·Î API Client¸¦ »ı¼ºÇÕ´Ï´Ù.");
-        }
+            BaseUrl = normalizedBaseUrl
+        };
 
-        client = new SpeakatClient(httpClient);
-        client.BaseUrl = normalizedBaseUrl;
+        RefreshAuthHeader();
 
         Debug.Log($"[SpeakatApiProvider] BaseUrl={client.BaseUrl}");
         Debug.Log($"[SpeakatApiProvider] HttpClient.BaseAddress={httpClient.BaseAddress}");
@@ -73,7 +69,10 @@ public class SpeakatApiProvider : MonoBehaviour
             url = "https://speakat.hyorim.shop/";
         }
 
-        url = url.Trim().Replace("\r", "").Replace("\n", "").Replace("\t", "");
+        url = url.Trim()
+            .Replace("\r", "")
+            .Replace("\n", "")
+            .Replace("\t", "");
 
         if (!url.StartsWith("http://") && !url.StartsWith("https://"))
         {
@@ -95,12 +94,12 @@ public class SpeakatApiProvider : MonoBehaviour
         if (TokenStore.Instance != null && !string.IsNullOrEmpty(TokenStore.Instance.AccessToken))
         {
             accessToken = TokenStore.Instance.AccessToken.Trim();
-            Debug.Log("[SpeakatApiProvider] TokenStore.AccessTokenÀ» »ç¿ëÇÕ´Ï´Ù.");
+            Debug.Log("[SpeakatApiProvider] TokenStore.AccessTokenì„ ì‚¬ìš©í•©ë‹ˆë‹¤.");
         }
         else if (!string.IsNullOrEmpty(debugAccessToken))
         {
             accessToken = debugAccessToken.Trim();
-            Debug.LogWarning("[SpeakatApiProvider] TokenStore°¡ ¾ø¾î debugAccessTokenÀ» »ç¿ëÇÕ´Ï´Ù.");
+            Debug.LogWarning("[SpeakatApiProvider] TokenStoreê°€ ë¹„ì–´ ìˆì–´ debugAccessTokenì„ ì‚¬ìš©í•©ë‹ˆë‹¤.");
         }
 
         if (!string.IsNullOrEmpty(accessToken))
@@ -129,12 +128,18 @@ public class SpeakatApiProvider : MonoBehaviour
             httpClient.DefaultRequestHeaders.Authorization =
                 new AuthenticationHeaderValue("Bearer", accessToken);
 
-            Debug.Log("[SpeakatApiProvider] Authorization Çì´õ °»½Å ¿Ï·á");
+            Debug.Log("[SpeakatApiProvider] Authorization Bearer token ì„¤ì • ì™„ë£Œ");
+        }
+        else
+        {
+            Debug.LogWarning("[SpeakatApiProvider] AccessTokenì´ ì—†ìŠµë‹ˆë‹¤. ë¹„ë¡œê·¸ì¸ ìƒíƒœë¡œ API Clientë¥¼ ì‚¬ìš©í•©ë‹ˆë‹¤.");
         }
     }
 
     private void OnDestroy()
     {
         httpClient?.Dispose();
+        httpClient = null;
+        client = null;
     }
 }

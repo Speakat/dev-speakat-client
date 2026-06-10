@@ -32,7 +32,7 @@ public class StageSwipeUIController : MonoBehaviour
 
     public void Start()
     {
-        int stageCount = StageManager.Instance.GetStageCount();
+        int stageCount = SceneContext.StageListData.items.Count;
         int selectedStageId = SceneContext.SelectedStageId;
         Init(stageCount, selectedStageId);
     }
@@ -84,12 +84,27 @@ public class StageSwipeUIController : MonoBehaviour
 
     private void SetPrefabs(int count)
     {
+        GameObject[] pages = new GameObject[count];
         for (int i = 0; i < count; ++i)
         {
             GameObject page = Instantiate(pagePrefab, transform);
+            pages[i] = page;
             GameObject indicator = Instantiate(indicatorPrefab, indicatorParent);
 
-            page.GetComponent<QuestPanelUIController>().SetQuestPanel(i + 1);
+            // page.GetComponent<QuestPanelUIController>().SetQuestPanel(i + 1);
+        }
+
+        MappingStageId(pages);
+    }
+
+    public void MappingStageId(GameObject[] stagePanels)
+    {
+        for (int i = 0; i < stagePanels.Length; i++)
+        {
+            QuestPanelUIController panelController = stagePanels[i].GetComponent<QuestPanelUIController>();
+            int stageId = SceneContext.StageListData.items[i].stageId;
+            panelController.StageId = stageId;
+            panelController.SetQuestPanel();
         }
     }
 
@@ -110,7 +125,7 @@ public class StageSwipeUIController : MonoBehaviour
     {
         if (isSwiping == true) return;
 
-// 유니티 에디터 테스트용
+        // 유니티 에디터 테스트용
 #if UNITY_EDITOR
         if (Input.GetMouseButtonDown(0))
         {

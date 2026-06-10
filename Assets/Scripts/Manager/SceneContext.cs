@@ -2,6 +2,7 @@ public static class SceneContext
 {
     public static int SelectedStageId { get; private set; }
     public static int SelectedQuestId { get; private set; }
+    public static StageList StageListData { get; private set; }
 
     public static void SetSelectedStage(int stageId)
     {
@@ -17,4 +18,15 @@ public static class SceneContext
     {
         SelectedStageId = 0;
     }  
+
+    public static void SetStageListData(StageList stageListData)
+    {
+        StageListData = stageListData;
+    }
+
+    public static int GetCompletedQuestCount(int stageId)
+    {
+        return StageListData.items.Find(item => item.stageId == stageId)?.completedQuestCount ?? -1;
+    }
+
 }

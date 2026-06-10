@@ -1,4 +1,4 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 
@@ -7,9 +7,6 @@ public class FilterTab : MonoBehaviour
     [SerializeField] private Image bgImage;
     [SerializeField] private TMP_Text tabText;
     [SerializeField] private Button tabButton;
-
-    [SerializeField] private Sprite selectedSprite;
-    [SerializeField] private Sprite deselectedSprite;
 
     public string FilterName { get; private set; }
 
@@ -24,10 +21,10 @@ public class FilterTab : MonoBehaviour
 
     public void SetSelected(bool isSelected)
     {
-        // isSelected°¡ true(¼±ÅÃµÊ)¸é °ËÀº»ö, false(¾È ¼±ÅÃµÊ)¸é Èò»ö
+        // isSelectedê°€ true(ì„ íƒë¨)ë©´ ê²€ì€ìƒ‰, false(ì•ˆ ì„ íƒë¨)ë©´ í°ìƒ‰
         bgImage.color = isSelected ? Color.black : Color.white;
 
-        // ±ÛÀÚ»öÀº ¹İ´ë·Î! ¼±ÅÃµÇ¸é Èò»ö, ¾È ¼±ÅÃµÇ¸é °ËÀº»ö
+        // ê¸€ììƒ‰ì€ ë°˜ëŒ€ë¡œ! ì„ íƒë˜ë©´ í°ìƒ‰, ì•ˆ ì„ íƒë˜ë©´ ê²€ì€ìƒ‰
         tabText.color = isSelected ? Color.white : Color.black;
     }
 }

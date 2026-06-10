@@ -1,5 +1,7 @@
+using System.Threading.Tasks;
 using TMPro;
 using UnityEngine;
+using UnityEngine.Networking;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
@@ -16,6 +18,16 @@ public class QuestPopupUIController : MonoBehaviour
     private TextMeshProUGUI[] objectivesText;
     [SerializeField]
     private Button startButton;
+
+    public GameObject objectTextPrefab;
+    public GameObject objectivesContainer;
+
+    public GameObject questPopupPanel;
+    public GameObject loadingPanel;
+
+
+    private const string BaseUrl = "http://speakat.hyorim.shop"; 
+    private const string QuestDetailEndpoint = "/quests/{0}";
 
     private int currentQuestId;
     private int currentStageId;
@@ -44,13 +56,14 @@ public class QuestPopupUIController : MonoBehaviour
     {
         startButton.onClick.AddListener(OnStart);
 
-        questDetailResponse = JsonUtility.FromJson<QuestDetailResponse>(questDetailDummyData);
-        questDetailData = questDetailResponse.data;
+        questPopupPanel.SetActive(false);
+        loadingPanel.SetActive(true);
     }
 
-    private void Start()
+    public async void SetQuestPopup(int questId)
     {
-        SetPopupUI(questDetailData);
+        currentQuestId = questId;
+        await SetQuestPanel();
     }
 
     public void SetPopupUI(QuestDetailData data)
@@ -61,18 +74,15 @@ public class QuestPopupUIController : MonoBehaviour
         titleText.text = data.title;
         descriptionText.text = data.description;
 
-        for (int i = 0; i < objectivesText.Length; i++)
+        for (int i = 0; i < data.objectives.Count; i++)
         {
-            if (i < data.objectives.Count)
-            {
-                objectivesText[i].text = $"• {data.objectives[i]}";
-                objectivesText[i].gameObject.SetActive(true);
-            }
-            else
-            {
-                objectivesText[i].gameObject.SetActive(false);
-            }
+            GameObject objectiveGO = Instantiate(objectTextPrefab, objectivesContainer.transform);
+            TextMeshProUGUI objectiveText = objectiveGO.GetComponent<TextMeshProUGUI>();
+            objectiveText.text = $"• {data.objectives[i]}";
         }
+
+        loadingPanel.SetActive(false);
+        questPopupPanel.SetActive(true);
     }
 
     private void OnStart()
@@ -80,6 +90,41 @@ public class QuestPopupUIController : MonoBehaviour
         SceneContext.SetSelectedStage(currentStageId);
         SceneContext.SetSelectedQuest(currentQuestId);
 
+        Destroy(QuestManager.Instance.gameObject);
+
         SceneManager.LoadScene("GamePlayScene");
+    }
+
+    public async Task SetQuestPanel()
+    {
+        try
+        {
+            string url = "https://speakat.hyorim.shop" + string.Format(QuestDetailEndpoint, currentQuestId);
+            //Debug.Log($"[QuestPanelUIController] 요청 URL: {url}");
+            string json = await GetAsync(url);
+            //Debug.Log($"[QuestPanelUIController] 응답 raw: {json}");
+            questDetailResponse = JsonUtility.FromJson<QuestDetailResponse>(json);
+            SetPopupUI(questDetailResponse.data);
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError($"[QuestPanelUIController] 퀘스트 상세 로드 실패 (questId={currentQuestId}): {e.Message}");
+        }
+    }
+
+    private async Task<string> GetAsync(string url)
+    {
+        string token = TokenStore.Instance.AccessToken.Trim();
+
+        using UnityWebRequest req = UnityWebRequest.Get(url);
+        req.SetRequestHeader("Authorization", $"Bearer {token}");
+        req.SetRequestHeader("Content-Type", "application/json");
+
+        await req.SendWebRequest();
+
+        if (req.result == UnityWebRequest.Result.Success)
+            return req.downloadHandler.text;
+
+        throw new System.Exception($"[{req.responseCode}] {req.error} — {req.downloadHandler.text}");
     }
 }
