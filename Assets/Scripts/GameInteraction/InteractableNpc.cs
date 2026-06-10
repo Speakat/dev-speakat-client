@@ -1,5 +1,6 @@
 using System.Collections;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 public class InteractableNpc : MonoBehaviour
 {
@@ -28,8 +29,34 @@ public class InteractableNpc : MonoBehaviour
         if (npcCollider == null)
             npcCollider = GetComponent<Collider>();
     }
+    
+    private void Update()
+    {
+        if (Pointer.current == null)
+            return;
 
-    private void OnMouseDown()
+        if (Pointer.current.press.wasPressedThisFrame)
+        {
+            TryInteract();
+        }
+    }
+
+    private void TryInteract()
+    {
+        Vector2 screenPosition = Pointer.current.position.ReadValue();
+
+        Ray ray = Camera.main.ScreenPointToRay(screenPosition);
+
+        if (!Physics.Raycast(ray, out RaycastHit hit))
+            return;
+
+        if (hit.collider != npcCollider)
+            return;
+
+        Interact();
+    }
+
+    private void Interact()
     {
         if (isInteracting)
             return;

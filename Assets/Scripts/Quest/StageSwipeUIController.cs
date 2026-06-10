@@ -1,6 +1,7 @@
 using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.InputSystem;
 
 public class StageSwipeUIController : MonoBehaviour
 {
@@ -123,39 +124,59 @@ public class StageSwipeUIController : MonoBehaviour
 
     private void UpdateInput()
     {
-        if (isSwiping == true) return;
+        if (isSwiping) return;
 
-        // 유니티 에디터 테스트용
-#if UNITY_EDITOR
-        if (Input.GetMouseButtonDown(0))
+        if (Pointer.current == null) return;
+
+        // 터치 시작
+        if (Pointer.current.press.wasPressedThisFrame)
         {
-            startTouchPositionX = Input.mousePosition.x;
+            startTouchPositionX = Pointer.current.position.ReadValue().x;
         }
-        else if (Input.GetMouseButtonUp(0))
+
+        // 터치 종료
+        if (Pointer.current.press.wasReleasedThisFrame)
         {
-            endTouchPositionX = Input.mousePosition.x;
+            endTouchPositionX = Pointer.current.position.ReadValue().x;
             UpdateSwipe();
         }
-#endif
-
-#if UNITY_ANDROID
-		if ( Input.touchCount == 1 )
-		{
-			Touch touch = Input.GetTouch(0);
-
-			if ( touch.phase == TouchPhase.Began )
-			{
-				startTouchPositionX = touch.position.x;
-			}
-			else if ( touch.phase == TouchPhase.Ended )
-			{
-				endTouchPositionX = touch.position.x;
-
-				UpdateSwipe();
-			}
-		}
-#endif
     }
+
+//     private void UpdateInput()
+//     {
+//         if (isSwiping == true) return;
+
+//         // 유니티 에디터 테스트용
+// #if UNITY_EDITOR
+//         if (Input.GetMouseButtonDown(0))
+//         {
+//             startTouchPositionX = Input.mousePosition.x;
+//         }
+//         else if (Input.GetMouseButtonUp(0))
+//         {
+//             endTouchPositionX = Input.mousePosition.x;
+//             UpdateSwipe();
+//         }
+// #endif
+
+// #if UNITY_ANDROID
+// 		if ( Input.touchCount == 1 )
+// 		{
+// 			Touch touch = Input.GetTouch(0);
+
+// 			if ( touch.phase == TouchPhase.Began )
+// 			{
+// 				startTouchPositionX = touch.position.x;
+// 			}
+// 			else if ( touch.phase == TouchPhase.Ended )
+// 			{
+// 				endTouchPositionX = touch.position.x;
+
+// 				UpdateSwipe();
+// 			}
+// 		}
+// #endif
+//     }
 
     private void UpdateSwipe()
     {
