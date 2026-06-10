@@ -5,7 +5,7 @@ public class PlayerClickMover : MonoBehaviour
 {
     [Header("Move Settings")]
     [SerializeField] private float moveSpeed = 25f;
-    [SerializeField] private float arriveDistance = 1.2f;
+    private float arriveDistance = 3f;
 
     [Header("Optional")]
     [SerializeField] private Animator animator;
