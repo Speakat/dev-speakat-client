@@ -9,6 +9,7 @@ public class VocaCard : MonoBehaviour
     [SerializeField] private TMP_Text meaningText;
     [SerializeField] private TMP_Text questNameText;
     [SerializeField] private Button soundBtn;
+    [SerializeField] private TMP_Text masteredText;
 
     private WordData currentData;
     private Action<WordData> onClickSound;
@@ -22,10 +23,25 @@ public class VocaCard : MonoBehaviour
             wordText.text = data.word;
 
         if (meaningText != null)
-            meaningText.text = data.meaning;
+        {
+            meaningText.enableAutoSizing = false;
+            meaningText.enableWordWrapping = true;
+            meaningText.overflowMode = TextOverflowModes.Ellipsis;
+            meaningText.maxVisibleLines = 2;
+
+            string meaning = data.meaning ?? "";
+            meaning = meaning.Replace("\n", " ").Replace("\r", " ");
+
+            meaningText.text = meaning;
+        }
 
         if (questNameText != null)
             questNameText.text = data.questName;
+
+        if (masteredText != null)
+        {
+            masteredText.text = data.isMastered ? "마스터" : "복습 필요";
+        }
 
         if (soundBtn != null)
         {

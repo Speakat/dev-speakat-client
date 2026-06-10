@@ -39,6 +39,14 @@ public class VocabularyModels : MonoBehaviour
     [Header("Audio")]
     [SerializeField] private AudioSource audioSource;
 
+    [Header("Empty State")]
+    [SerializeField] private GameObject emptyStatePanel;
+
+    [Header("Pagination")]
+    [SerializeField] private Button loadMoreButton;
+
+    private bool isLoading;
+
     private bool isPlayingWordAudio = false;
 
     private IObjectPool<GameObject> vocaCardPool;
@@ -93,8 +101,24 @@ public class VocabularyModels : MonoBehaviour
 
         BindNavigationEvents();
 
+        if (loadMoreButton != null)
+        {
+            loadMoreButton.onClick.RemoveAllListeners();
+            loadMoreButton.onClick.AddListener(OnClickLoadMore);
+            loadMoreButton.gameObject.SetActive(false);
+        }
+
         await LoadApiData();
     }
+
+    private async void OnClickLoadMore()
+    {
+        if (currentData == null || !currentData.hasMore)
+            return;
+
+        await LoadApiData(selectedQuestId, append: true);
+    }
+
     private void BindNavigationEvents()
     {
         if (backButton != null)
@@ -177,9 +201,19 @@ public class VocabularyModels : MonoBehaviour
     public void UpdateUI(VocabularyData data)
     {
         currentData = data;
-        allWords = data.wordList != null ? new List<WordData>(data.wordList) : new List<WordData>();
 
-        RebuildWordCards(data.wordList);
+        List<WordData> words = data != null && data.wordList != null
+            ? data.wordList
+            : new List<WordData>();
+
+        allWords = new List<WordData>(words);
+
+        bool isEmpty = words.Count == 0;
+
+        if (emptyStatePanel != null)
+            emptyStatePanel.SetActive(isEmpty);
+
+        RebuildWordCards(words);
     }
 
     // 단어 카드 생성
@@ -189,6 +223,16 @@ public class VocabularyModels : MonoBehaviour
             vocaCardPool.Release(card);
 
         activeCards.Clear();
+
+        if (words == null || words.Count == 0)
+        {
+            Canvas.ForceUpdateCanvases();
+
+            if (wordListContent is RectTransform emptyRect)
+                LayoutRebuilder.ForceRebuildLayoutImmediate(emptyRect);
+
+            return;
+        }
 
         foreach (WordData wordData in words)
         {
@@ -243,8 +287,11 @@ public class VocabularyModels : MonoBehaviour
         flashCardView.Open(currentData.wordList, 0);
     }
 
-    private async System.Threading.Tasks.Task LoadApiData(long? questId = null)
+    private async System.Threading.Tasks.Task LoadApiData(long? questId = null, bool append = false)
     {
+        if (isLoading)
+            return;
+
         if (vocabularyApiService == null)
         {
             Debug.LogWarning("[VocabularyView] vocabularyApiService 연결 안됨. 더미데이터 사용");
@@ -254,35 +301,61 @@ public class VocabularyModels : MonoBehaviour
 
         try
         {
-            selectedQuestId = questId;
+            isLoading = true;
+
+            if (!append)
+                selectedQuestId = questId;
+
+            string cursor = append && currentData != null
+                ? currentData.nextCursor
+                : null;
 
             VocabularyData data = await vocabularyApiService.GetFlashcardsAsync(
-                cursor: null,
+                cursor: cursor,
                 size: 20,
                 questId: selectedQuestId
             );
 
-            currentData = data;
-
-            // 전체 조회일 때만 필터 목록 캐싱
-            // 특정 questId로 재조회하면 응답이 해당 퀘스트만 오기 때문에 필터가 줄어드는 걸 방지
-            if (selectedQuestId == null && data.questFilterDataList != null)
+            if (append && currentData != null)
             {
-                cachedQuestFilters = data.questFilterDataList;
+                if (currentData.wordList == null)
+                    currentData.wordList = new List<WordData>();
+
+                if (data.wordList != null)
+                    currentData.wordList.AddRange(data.wordList);
+
+                currentData.nextCursor = data.nextCursor;
+                currentData.hasMore = data.hasMore;
+                currentData.wordsToReviewCount = currentData.wordList.FindAll(w => !w.isMastered).Count;
+
+                UpdateUI(currentData);
+            }
+            else
+            {
+                currentData = data;
+
+                if (selectedQuestId == null && data.questFilterDataList != null)
+                    cachedQuestFilters = data.questFilterDataList;
+
+                UpdateUI(data);
+                RefreshFilterTabs();
             }
 
-            UpdateUI(data);
+            if (loadMoreButton != null)
+                loadMoreButton.gameObject.SetActive(currentData != null && currentData.hasMore);
 
-            RefreshFilterTabs();
-
-            Debug.Log($"[VocabularyView] API 데이터 로드 성공: questId={selectedQuestId}");
+            Debug.Log($"[VocabularyView] API 데이터 로드 성공: questId={selectedQuestId}, append={append}");
         }
         catch (System.Exception e)
         {
             Debug.LogError($"[VocabularyView] API 데이터 로드 실패:\n{e}");
 
-            if (useDummyOnApiFail)
+            if (useDummyOnApiFail && !append)
                 LoadDummyData();
+        }
+        finally
+        {
+            isLoading = false;
         }
     }
 

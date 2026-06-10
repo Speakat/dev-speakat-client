@@ -71,7 +71,8 @@ public class VocabularyApiService : MonoBehaviour
                 isMastered = isMastered,
                 questId = itemQuestId,
                 questName = questName,
-                audioUrl = null
+                audioUrl = null,
+                savedAt = item.SavedAt?.ToString()
             };
         }).ToList();
 
