@@ -266,16 +266,17 @@ public class RecordButtonController : MonoBehaviour
 
     protected virtual void OnUploadSuccess(string responseJson) { }
     protected virtual void OnUploadFailed(string error) { }
-#endif
+    
+    #endif
 
     void OnDestroy()
     {
-#if !UNITY_WEBGL
-        if (_isRecording)
-        {
-            Microphone.End(_activeDevice);
-        }
-#endif
+    #if !UNITY_WEBGL
+            if (_isRecording)
+            {
+                Microphone.End(_activeDevice);
+            }
+    #endif
     }
 
     private bool HasMicrophonePermission()
