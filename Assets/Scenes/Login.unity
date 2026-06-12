@@ -1008,7 +1008,7 @@ MonoBehaviour:
   authApi: {fileID: 411056538}
   webViewOAuthService: {fileID: 411056537}
   linkHandler: {fileID: 411056539}
-  nextSceneName: Stage
+  nextSceneName: StageScene
   signupInfoPanel: {fileID: 756311183}
   signupViewController: {fileID: 756311184}
 --- !u!4 &411056535
@@ -1093,7 +1093,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SpeakatApiProvider
   baseUrl: https://speakat.hyorim.shop/
-  debugAccessToken: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI0N2EzN2Q4ZS1hYTQ5LTRlMzItOGRmMC04NzJmZDE5N2U0NzAiLCJpYXQiOjE3NDg1NjMyMDAsImV4cCI6OTk5OTk5OTk5OX0.OVBxI96G65YqG221phZKUF3Pb7G8DO9ODewmzIPX1cc
+  debugAccessToken: 
 --- !u!1 &411083944
 GameObject:
   m_ObjectHideFlags: 0
@@ -1376,8 +1376,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 26025b491fc81ca42abbe71314c4a1df, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::KakaoLoginService
-  restApiKey: 
-  redirectUri: myapp://oauth/kakao
 --- !u!114 &559614873
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1390,8 +1388,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c328e4482b24ddf479ed78f9d5f7dc56, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GoogleLoginService
-  clientId: 358666565391-nbats8o0q0bamfstt5590bgjug3qgbp3.apps.googleusercontent.com
-  redirectUri: https://developers.google.com/oauthplayground
 --- !u!1 &623825651
 GameObject:
   m_ObjectHideFlags: 0

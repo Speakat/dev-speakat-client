@@ -7,7 +7,7 @@ public class StageManager : MonoBehaviour
     [SerializeField]
     private StageScrollUIController stageScrollUIController;
 
-    private const string BaseUrl = "http://speakat.hyorim.shop";
+    private const string BaseUrl = "https://speakat.hyorim.shop";
     private const string StageListEndpoint = "/stages";
 
     private string stageListDummyData = @"

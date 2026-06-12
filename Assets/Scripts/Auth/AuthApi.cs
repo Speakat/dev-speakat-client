@@ -1,4 +1,4 @@
-using System;
+ï»¿using System;
 using System.Collections;
 using System.Text;
 using System.Threading.Tasks;
@@ -15,7 +15,7 @@ public class AuthApi : MonoBehaviour
         get
         {
             if (apiProvider == null)
-                throw new Exception("[AuthApi] apiProvider°¡ ¿¬°áµÇÁö ¾Ê¾Ò½À´Ï´Ù.");
+                throw new Exception("[AuthApi] apiProviderê°€ ì—°ê²°ë˜ì§€ ì•Šì•˜ìŠµë‹ˆë‹¤.");
 
             return apiProvider.Client;
         }
