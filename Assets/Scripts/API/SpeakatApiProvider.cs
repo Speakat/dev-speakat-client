@@ -51,7 +51,8 @@ public class SpeakatApiProvider : MonoBehaviour
 
         client = new SpeakatClient(httpClient)
         {
-            BaseUrl = normalizedBaseUrl
+            BaseUrl = normalizedBaseUrl,
+            ReadResponseAsString = true
         };
 
         RefreshAuthHeader();

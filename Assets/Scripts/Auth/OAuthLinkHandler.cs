@@ -5,6 +5,10 @@ public class OAuthLinkHandler : MonoBehaviour
 {
     public event Action<string, string> OnAuthorizationCodeReceived;
 
+    private bool _hasPendingCode;
+    private string _pendingProvider;
+    private string _pendingCode;
+
     private void Awake()
     {
         Application.deepLinkActivated += HandleDeepLink;
@@ -57,12 +61,42 @@ public class OAuthLinkHandler : MonoBehaviour
 
         if (!string.IsNullOrEmpty(provider) && !string.IsNullOrEmpty(code))
         {
-            OnAuthorizationCodeReceived?.Invoke(provider, code);
+            if (OnAuthorizationCodeReceived != null)
+            {
+                OnAuthorizationCodeReceived.Invoke(provider, code);
+            }
+            else
+            {
+                Debug.LogWarning("[OAuthLinkHandler] No subscriber yet. Caching code for replay once a subscriber registers.");
+
+                _hasPendingCode = true;
+                _pendingProvider = provider;
+                _pendingCode = code;
+            }
         }
         else
         {
             Debug.LogWarning($"[OAuthLinkHandler] provider/code missing. provider={provider}, codeEmpty={string.IsNullOrEmpty(code)}");
         }
+    }
+
+    public bool TryConsumePendingCode(out string provider, out string code)
+    {
+        if (!_hasPendingCode)
+        {
+            provider = null;
+            code = null;
+            return false;
+        }
+
+        provider = _pendingProvider;
+        code = _pendingCode;
+
+        _hasPendingCode = false;
+        _pendingProvider = null;
+        _pendingCode = null;
+
+        return true;
     }
 
     private string ExtractProvider(Uri uri)

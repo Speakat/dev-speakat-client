@@ -11,7 +11,7 @@ public class AuthManager : MonoBehaviour
     [SerializeField] private OAuthLinkHandler linkHandler;
 
     [Header("Scene & UI Routing")]
-    [SerializeField] private string nextSceneName = "Stage";
+    [SerializeField] private string nextSceneName = "StageScene";
     [SerializeField] private GameObject signupInfoPanel;
     [SerializeField] private SignupViewController signupViewController;
 
@@ -160,13 +160,15 @@ public class AuthManager : MonoBehaviour
             else
             {
                 Debug.LogWarning("[AuthManager] signupInfoPanel is not assigned. Move to next scene.");
-                SceneManager.LoadScene(nextSceneName);
+                // SceneManager.LoadScene(nextSceneName);
+                LoadNextScene();
             }
         }
         else
         {
             Debug.Log("[AuthManager] Existing user. Move to next scene.");
-            SceneManager.LoadScene(nextSceneName);
+            // SceneManager.LoadScene(nextSceneName);
+            LoadNextScene();
         }
     }
 
@@ -177,6 +179,21 @@ public class AuthManager : MonoBehaviour
 
     public void GoToNextScene()
     {
+        // SceneManager.LoadScene(nextSceneName);
+        LoadNextScene();
+    }
+
+    private void LoadNextScene()
+    {
+        Debug.Log($"[AuthManager] Try LoadScene: {nextSceneName}");
+        Debug.Log($"[AuthManager] CanStreamedLevelBeLoaded: {Application.CanStreamedLevelBeLoaded(nextSceneName)}");
+
+        if (!Application.CanStreamedLevelBeLoaded(nextSceneName))
+        {
+            Debug.LogError($"[AuthManager] Scene '{nextSceneName}'를 로드할 수 없습니다. Build Settings에 포함되어 있는지 확인하세요.");
+            return;
+        }
+
         SceneManager.LoadScene(nextSceneName);
     }
 }
