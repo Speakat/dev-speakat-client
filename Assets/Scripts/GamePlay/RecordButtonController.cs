@@ -25,7 +25,7 @@ public class RecordButtonController : MonoBehaviour
     public Sprite recordingSprite;
 
     public Button recordButton;
-    private float maxRecordingSeconds = 5f;
+    private float maxRecordingSeconds = 20f;
 
     public string microphoneDevice = "";
     public int sampleRate = 16000;
@@ -128,7 +128,7 @@ public class RecordButtonController : MonoBehaviour
 
     IEnumerator AutoStopAfterTimeout()
     {
-        yield return new WaitForSeconds(maxRecordingSeconds);
+        yield return new WaitForSecondsRealtime(maxRecordingSeconds);
 
         if (_isRecording)
         {
