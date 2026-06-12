@@ -128,7 +128,7 @@ public class RecordButtonController : MonoBehaviour
 
     IEnumerator AutoStopAfterTimeout()
     {
-        yield return new WaitForSeconds(maxRecordingSeconds);
+        yield return new WaitForSecondsRealtime(maxRecordingSeconds);
 
         if (_isRecording)
         {
