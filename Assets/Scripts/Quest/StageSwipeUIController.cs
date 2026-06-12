@@ -75,7 +75,7 @@ public class StageSwipeUIController : MonoBehaviour
         }
 
         // 선택된 스테이지 설정
-        int targetIndex = selectedStageId - 1;
+        int targetIndex = 0;
         if (targetIndex < 0 || targetIndex >= maxPage)
         {
             targetIndex = 0;
