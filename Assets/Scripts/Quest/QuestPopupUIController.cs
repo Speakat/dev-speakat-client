@@ -26,7 +26,7 @@ public class QuestPopupUIController : MonoBehaviour
     public GameObject loadingPanel;
 
 
-    private const string BaseUrl = "http://speakat.hyorim.shop"; 
+    private const string BaseUrl = "https://speakat.hyorim.shop"; 
     private const string QuestDetailEndpoint = "/quests/{0}";
 
     private int currentQuestId;
