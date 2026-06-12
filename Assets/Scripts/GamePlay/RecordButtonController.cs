@@ -25,7 +25,7 @@ public class RecordButtonController : MonoBehaviour
     public Sprite recordingSprite;
 
     public Button recordButton;
-    private float maxRecordingSeconds = 5f;
+    private float maxRecordingSeconds = 30f;
 
     public string microphoneDevice = "";
     public int sampleRate = 16000;
