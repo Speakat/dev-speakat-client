@@ -2,6 +2,7 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.InputSystem;
+using System.Collections.Generic;
 
 public class StageSwipeUIController : MonoBehaviour
 {
@@ -21,6 +22,8 @@ public class StageSwipeUIController : MonoBehaviour
     private float swipeTime = 0.2f; // 스와이프 되는 시간
     [SerializeField]
     private float swipeDistance = 50.0f; // 다음 페이지 넘어가기 위한 스와이프 거리
+
+    private List<int> pageStageIds = new(); // 스와이프 페이지에 해당하는 스테이지 ID 리스트
 
     private float[] scrollPageValues; // 각 페이지 위치 값
     private float valueDistance; // 페이지 사이 거리
@@ -75,7 +78,7 @@ public class StageSwipeUIController : MonoBehaviour
         }
 
         // 선택된 스테이지 설정
-        int targetIndex = 0;
+        int targetIndex = System.Array.IndexOf(pageStageIds.ToArray(), selectedStageId);
         if (targetIndex < 0 || targetIndex >= maxPage)
         {
             targetIndex = 0;
@@ -104,6 +107,9 @@ public class StageSwipeUIController : MonoBehaviour
         {
             QuestPanelUIController panelController = stagePanels[i].GetComponent<QuestPanelUIController>();
             int stageId = SceneContext.StageListData.items[i].stageId;
+
+            pageStageIds[i] = stageId;
+
             panelController.StageId = stageId;
             panelController.SetQuestPanel();
         }
