@@ -304,8 +304,12 @@ public class AuthApi : MonoBehaviour
 
     private string BuildUrl(string path)
     {
-        string root = "https://speakat.hyorim.shop";
+        if (apiProvider == null)
+            throw new Exception("[AuthApi] apiProvider가 연결되지 않았습니다.");
+
+        string root = apiProvider.ApiBaseUrl; // 하드코딩된 url 수정
         string p = path.StartsWith("/") ? path : "/" + path;
+        
         return root.TrimEnd('/') + p;
     }
 

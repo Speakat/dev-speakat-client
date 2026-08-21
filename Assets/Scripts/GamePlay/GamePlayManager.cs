@@ -33,6 +33,7 @@ public class GamePlayManager : MonoBehaviour
     private bool isSubmittingSpeech = false;
 
     [SerializeField] private StageReactionController stageReactionController;
+    [SerializeField] private SpeakatApiProvider apiProvider;
 
     QuestResult questResult;
 
@@ -321,9 +322,19 @@ public class GamePlayManager : MonoBehaviour
                 result.isQuestSuccess);
     }
 
+    private string BuildUrl(string endpoint)
+    {
+        if (apiProvider == null)
+            throw new System.Exception("[GamePlayManager] apiProvider가 연결되지 않았습니다.");
+
+        string path = endpoint.StartsWith("/") ? endpoint : "/" + endpoint;
+        return apiProvider.ApiBaseUrl.TrimEnd('/') + path;
+    }
+
     private async Task<string> PostSessionAsync(int questId)
     {
-        string url = "https://speakat.hyorim.shop" + SessionEndpoint;
+        //string url = "https://speakat.hyorim.shop" + SessionEndpoint;
+        string url = BuildUrl(SessionEndpoint);
         string body = JsonUtility.ToJson(new SessionRequest { quest_id = questId });
 
         Debug.Log($"[GamePlayManager] PostSession url={url}, body={body}");
@@ -338,7 +349,7 @@ public class GamePlayManager : MonoBehaviour
             throw new System.Exception("[GamePlayManager] sessionId가 비어 있어 speech 요청을 보낼 수 없습니다.");
         }
 
-        string url = "https://speakat.hyorim.shop" + string.Format(SpeechEndpoint, sessionId);
+        string url = BuildUrl(string.Format(SpeechEndpoint, sessionId));
         string body = JsonUtility.ToJson(new SpeechRequest
         {
             quest_id = questId,
@@ -356,7 +367,7 @@ public class GamePlayManager : MonoBehaviour
     {
         try
         {
-            string url = "https://speakat.hyorim.shop" + string.Format(SessionEndEndpoint, sessionId);
+            string url = BuildUrl(string.Format(SessionEndEndpoint, sessionId));
             string json = await PostAsync(url, "{}");
         }
         catch (System.Exception e)

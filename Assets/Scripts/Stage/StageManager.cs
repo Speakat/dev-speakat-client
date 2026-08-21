@@ -7,8 +7,19 @@ public class StageManager : MonoBehaviour
     [SerializeField]
     private StageScrollUIController stageScrollUIController;
 
-    private const string BaseUrl = "https://speakat.hyorim.shop";
+    //private const string BaseUrl = "https://speakat.hyorim.shop";
+    [SerializeField] private SpeakatApiProvider apiProvider;
+
     private const string StageListEndpoint = "/stages";
+
+    private string BuildUrl(string endpoint)
+    {
+        if (apiProvider == null)
+            throw new System.Exception("[StageManager] apiProvider가 연결되지 않았습니다.");
+
+        string path = endpoint.StartsWith("/") ? endpoint : "/" + endpoint;
+        return apiProvider.ApiBaseUrl.TrimEnd('/') + path;
+    }
 
     private string stageListDummyData = @"
     {
@@ -59,8 +70,7 @@ public class StageManager : MonoBehaviour
     {
         try
         {
-            string json = await GetAsync(BaseUrl + StageListEndpoint);
-            //Debug.Log($"[StageManager] 응답 raw: {json}");
+            string json = await GetAsync(BuildUrl(StageListEndpoint));
             StageData stageListData = JsonUtility.FromJson<StageData>(json);
             SceneContext.SetStageListData(stageListData.data);
             stageScrollUIController.SetStageScrollUI(stageListData.data);

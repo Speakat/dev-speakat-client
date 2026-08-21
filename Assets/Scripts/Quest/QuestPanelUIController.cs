@@ -19,8 +19,19 @@ public class QuestPanelUIController : MonoBehaviour
     public int StageId { get; set; }
 
 
-    private const string BaseUrl = "https://speakat.hyorim.shop";
+    //private const string BaseUrl = "https://speakat.hyorim.shop";
+    [SerializeField] private SpeakatApiProvider apiProvider;
+
     private const string StageDetailEndpoint = "/stages/";
+
+    private string BuildUrl(string endpoint)
+    {
+        if (apiProvider == null)
+            throw new System.Exception("[QuestPanelUIController] apiProvider가 연결되지 않았습니다.");
+
+        string path = endpoint.StartsWith("/") ? endpoint : "/" + endpoint;
+        return apiProvider.ApiBaseUrl.TrimEnd('/') + path;
+    }
 
     private string stageDetailDummyData = @"
 {
@@ -82,10 +93,11 @@ public class QuestPanelUIController : MonoBehaviour
     {
         try
         {
-            string url = BaseUrl + StageDetailEndpoint + StageId;
+            string url = BuildUrl(StageDetailEndpoint) + StageId;
             //Debug.Log($"[QuestPanelUIController] 요청 URL: {url}");
             string json = await GetAsync(url);
             //Debug.Log($"[QuestPanelUIController] 응답 raw: {json}");
+
             stageDetailResponse = JsonUtility.FromJson<StageDetailResponse>(json);
             ApplyStageDetail(stageDetailResponse);
         }

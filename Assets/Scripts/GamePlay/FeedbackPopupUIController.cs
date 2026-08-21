@@ -23,10 +23,21 @@ public class FeedbackPopupUIController : MonoBehaviour
 
     public Sprite successSaveIcon;
 
-    private const string BaseUrl = "https://speakat.hyorim.shop";
+    //private const string BaseUrl = "https://speakat.hyorim.shop";
+    [SerializeField] private SpeakatApiProvider apiProvider;
+
     private const string FlashcardsEndpoint = "/flashcards";
     private string currentFeedback = "";
     private List<string> currentSuggestions = new List<string>();
+
+    private string BuildUrl(string endpoint)
+    {
+        if (apiProvider == null)
+            throw new System.Exception("[FeedbackPopupUIController] apiProvider가 연결되지 않았습니다.");
+
+        string path = endpoint.StartsWith("/") ? endpoint : "/" + endpoint;
+        return apiProvider.ApiBaseUrl.TrimEnd('/') + path;
+    }
 
     private void Awake()
     {
@@ -93,7 +104,7 @@ public class FeedbackPopupUIController : MonoBehaviour
             bool success = false;
             string resultMessage = "";
 
-            yield return StartCoroutine(PostCoroutine(BaseUrl + FlashcardsEndpoint, body,
+            yield return StartCoroutine(PostCoroutine(BuildUrl(FlashcardsEndpoint), body,
                 onSuccess: (response) => { success = true; resultMessage = response; },
                 onFailure: (error) => { success = false; resultMessage = error; }
             ));

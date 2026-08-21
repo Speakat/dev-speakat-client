@@ -17,8 +17,16 @@ public class AuthManager : MonoBehaviour
 
     private void OnEnable()
     {
-        if (linkHandler != null)
-            linkHandler.OnAuthorizationCodeReceived += HandleAuthorizationCode;
+        if (linkHandler == null)
+            return;
+            
+        linkHandler.OnAuthorizationCodeReceived += HandleAuthorizationCode;
+
+        if (linkHandler.TryConsumePendingCode(out string provider, out string code))
+        {
+            Debug.Log($"[AuthManager] Pending authorization code cosumed. provider={provider}");
+            HandleAuthorizationCode(provider, code);
+        }
     }
 
     private void OnDisable()

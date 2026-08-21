@@ -26,11 +26,22 @@ public class QuestPopupUIController : MonoBehaviour
     public GameObject loadingPanel;
 
 
-    private const string BaseUrl = "https://speakat.hyorim.shop"; 
+    //private const string BaseUrl = "https://speakat.hyorim.shop"; 
+    [SerializeField] private SpeakatApiProvider apiProvider;
+
     private const string QuestDetailEndpoint = "/quests/{0}";
 
     private int currentQuestId;
     private int currentStageId;
+
+    private string BuildUrl(string endpoint)
+    {
+        if (apiProvider == null)
+            throw new System.Exception("[QuestPopupUIController] apiProvider가 연결되지 않았습니다.");
+
+        string path = endpoint.StartsWith("/") ? endpoint : "/" + endpoint;
+        return apiProvider.ApiBaseUrl.TrimEnd('/') + path;
+    }
 
     private string questDetailDummyData = @"
     {
@@ -99,10 +110,11 @@ public class QuestPopupUIController : MonoBehaviour
     {
         try
         {
-            string url = "https://speakat.hyorim.shop" + string.Format(QuestDetailEndpoint, currentQuestId);
+            string url = BuildUrl(string.Format(QuestDetailEndpoint, currentQuestId));
             //Debug.Log($"[QuestPanelUIController] 요청 URL: {url}");
             string json = await GetAsync(url);
             //Debug.Log($"[QuestPanelUIController] 응답 raw: {json}");
+
             questDetailResponse = JsonUtility.FromJson<QuestDetailResponse>(json);
             SetPopupUI(questDetailResponse.data);
         }

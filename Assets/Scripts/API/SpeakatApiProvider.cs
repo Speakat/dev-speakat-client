@@ -6,7 +6,7 @@ using Speakat.Client;
 
 public class SpeakatApiProvider : MonoBehaviour
 {
-    [SerializeField] private string baseUrl = "https://speakat.hyorim.shop/";
+    [SerializeField] private string baseUrl = "https://api.speakat.chokoring.com/";
     [SerializeField] private string debugAccessToken;
 
     private HttpClient httpClient;
@@ -67,7 +67,7 @@ public class SpeakatApiProvider : MonoBehaviour
 
         if (string.IsNullOrWhiteSpace(url))
         {
-            url = "https://speakat.hyorim.shop/";
+            url = "https://api.speakat.chokoring.com/";
         }
 
         url = url.Trim()

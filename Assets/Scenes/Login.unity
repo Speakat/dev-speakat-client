@@ -1039,10 +1039,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::WebViewOAuthService
   googleClientId: 358666565391-nbats8o0q0bamfstt5590bgjug3qgbp3.apps.googleusercontent.com
-  googleRedirectUri: https://speakatweb.hyorim.shop/callback.html
+  googleRedirectUri: https://speakatweb.chokoring.com/callback.html
   kakaoRestApiKey: 65b40e5bbe648253ff7eacda948dc9fd
-  kakaoRedirectUri: https://speakatweb.hyorim.shop/callback.html
-  webGLRedirectUri: https://speakatweb.hyorim.shop/callback.html
+  kakaoRedirectUri: https://speakatweb.chokoring.com/callback.html
+  oauthCallbackUri: https://speakatweb.chokoring.com/callback.html
 --- !u!114 &411056538
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1092,7 +1092,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ae8d48dfafb017d42b59e30bba4be283, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SpeakatApiProvider
-  baseUrl: https://speakat.hyorim.shop/
+  baseUrl: https://api.speakat.chokoring.com/
   debugAccessToken: 
 --- !u!1 &411083944
 GameObject:
