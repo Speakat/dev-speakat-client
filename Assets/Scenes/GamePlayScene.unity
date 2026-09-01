@@ -170,6 +170,8 @@ GameObject:
   m_Component:
   - component: {fileID: 111064160}
   - component: {fileID: 111064161}
+  - component: {fileID: 940010001}
+  - component: {fileID: 940010002}
   m_Layer: 0
   m_Name: GamePlayManager
   m_TagString: Untagged
@@ -211,10 +213,38 @@ MonoBehaviour:
   npcAudioController: {fileID: 1153384885}
   failurePopup: {fileID: 1342343318}
   logPanel: {fileID: 1764864468}
+  gamePlayApiService: {fileID: 940010002}
   turnCount: 0
   isAudioPlaying: 0
   stageReactionController: {fileID: 1748279547}
   startSessionOnSceneStart: 0
+--- !u!114 &940010001
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 111064159}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ae8d48dfafb017d42b59e30bba4be283, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::SpeakatApiProvider
+  baseUrl: https://api.speakat.chokoring.com/
+  debugAccessToken:
+--- !u!114 &940010002
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 111064159}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d87f668450c5480c93d6a4a72145ed9c, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::GamePlayApiService
+  apiProvider: {fileID: 940010001}
 --- !u!21 &122775604
 Material:
   serializedVersion: 8

@@ -1092,7 +1092,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ae8d48dfafb017d42b59e30bba4be283, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SpeakatApiProvider
-  baseUrl: https://speakat.hyorim.shop/
+  baseUrl: https://api.speakat.chokoring.com/
   debugAccessToken: 
 --- !u!1 &411083944
 GameObject:

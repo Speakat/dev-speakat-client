@@ -304,7 +304,7 @@ public class AuthApi : MonoBehaviour
 
     private string BuildUrl(string path)
     {
-        string root = "https://speakat.hyorim.shop";
+        string root = "https://api.speakat.chokoring.com";
         string p = path.StartsWith("/") ? path : "/" + path;
         return root.TrimEnd('/') + p;
     }

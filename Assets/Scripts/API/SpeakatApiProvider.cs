@@ -1,12 +1,13 @@
 using System;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Threading.Tasks;
 using UnityEngine;
 using Speakat.Client;
 
 public class SpeakatApiProvider : MonoBehaviour
 {
-    [SerializeField] private string baseUrl = "https://speakat.hyorim.shop/";
+    [SerializeField] private string baseUrl = "https://api.speakat.chokoring.com/";
     [SerializeField] private string debugAccessToken;
 
     private HttpClient httpClient;
@@ -67,7 +68,7 @@ public class SpeakatApiProvider : MonoBehaviour
 
         if (string.IsNullOrWhiteSpace(url))
         {
-            url = "https://speakat.hyorim.shop/";
+            url = "https://api.speakat.chokoring.com/";
         }
 
         url = url.Trim()
@@ -103,13 +104,23 @@ public class SpeakatApiProvider : MonoBehaviour
             Debug.LogWarning("[SpeakatApiProvider] TokenStore가 비어 있어 debugAccessToken을 사용합니다.");
         }
 
-        if (!string.IsNullOrEmpty(accessToken))
+        return accessToken;
+    }
+
+    public async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request)
+    {
+        if (request == null)
         {
-            Debug.Log($"[SpeakatApiProvider] token length={accessToken.Length}");
-            Debug.Log($"[SpeakatApiProvider] token startsWith eyJ={accessToken.StartsWith("eyJ")}");
+            throw new ArgumentNullException(nameof(request));
         }
 
-        return accessToken;
+        if (httpClient == null)
+        {
+            CreateClient();
+        }
+
+        RefreshAuthHeader();
+        return await httpClient.SendAsync(request);
     }
 
     public void RefreshAuthHeader()
