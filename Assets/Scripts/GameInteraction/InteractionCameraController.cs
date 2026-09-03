@@ -1,5 +1,5 @@
-/* InteractionCameraController.cs
-±âÁ¸ GameCameraControllerÀÇ °øÅë ¹öÀü (¿øÇÏ´Â transformÀ¸·Î ÀÌµ¿ÇÒ ¼ö ÀÖ°Ô ¼öÁ¤) */
+ï»¿/* InteractionCameraController.cs
+ê¸°ì¡´ GameCameraControllerì˜ ê³µí†µ ë²„ì „ (ì›í•˜ëŠ” transformìœ¼ë¡œ ì´ë™í•  ìˆ˜ ìˆê²Œ ìˆ˜ì •) */
 
 using System.Collections;
 using UnityEngine;

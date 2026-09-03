@@ -1,5 +1,5 @@
-/* StageInteractionController.cs
-Å¬¸¯µÈ target Ã³¸®, ÇÃ·¹ÀÌ¾î ÀÌµ¿ È£Ãâ, Ä«¸Ş¶ó ÀüÈ¯ È£Ãâ, µµÂø ÈÄ ÀÌº¥Æ® ½ÇÇà */
+ï»¿/* StageInteractionController.cs
+í´ë¦­ëœ target ì²˜ë¦¬, í”Œë ˆì´ì–´ ì´ë™ í˜¸ì¶œ, ì¹´ë©”ë¼ ì „í™˜ í˜¸ì¶œ, ë„ì°© í›„ ì´ë²¤íŠ¸ ì‹¤í–‰ */
 
 using UnityEngine;
 using UnityEngine.InputSystem;

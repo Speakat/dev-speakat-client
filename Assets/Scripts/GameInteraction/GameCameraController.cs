@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using UnityEngine;
 
 public class GameCameraController : MonoBehaviour
@@ -48,7 +48,7 @@ public class GameCameraController : MonoBehaviour
             elapsed += Time.deltaTime;
             float t = Mathf.Clamp01(elapsed / transitionDuration);
 
-            // �ε巯�� ease in/out
+            // 부드러운 ease in/out
             t = t * t * (3f - 2f * t);
 
             transform.position = Vector3.Lerp(startPos, endPos, t);

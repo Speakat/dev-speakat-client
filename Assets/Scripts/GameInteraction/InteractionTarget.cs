@@ -1,5 +1,5 @@
-/* InteractionTarget.cs
-NPC Á¤º¸, interactionPoint, cameraPoint, onInteractionStarted ÀÌº¥Æ® °ü·Ã ÄÚµå */
+ï»¿/* InteractionTarget.cs
+NPC ì •ë³´, interactionPoint, cameraPoint, onInteractionStarted ì´ë²¤íŠ¸ ê´€ë ¨ ì½”ë“œ */
 
 using UnityEngine;
 using UnityEngine.Events;

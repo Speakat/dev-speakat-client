@@ -1,4 +1,4 @@
-using System;
+ï»¿using System;
 using UnityEngine;
 
 public class PlayerClickMover : MonoBehaviour
@@ -39,7 +39,7 @@ public class PlayerClickMover : MonoBehaviour
 
         float distance = direction.magnitude;
 
-        // µµÂø ¹üÀ§ ¾ÈÀÌ¸é ´õ ÀÌ»ó È¸Àü/ÀÌµ¿ÇÏÁö ¾Ê°í ¸ØÃã
+        // ë„ì°© ë²”ìœ„ ì•ˆì´ë©´ ë” ì´ìƒ íšŒì „/ì´ë™í•˜ì§€ ì•Šê³  ë©ˆì¶¤
         if (distance <= arriveDistance)
         {
             StopMoving();
@@ -50,7 +50,7 @@ public class PlayerClickMover : MonoBehaviour
 
         transform.position += moveDirection * moveSpeed * Time.deltaTime;
 
-        // ¹æÇâÀÌ ÃæºĞÈ÷ Å¬ ¶§¸¸ È¸Àü
+        // ë°©í–¥ì´ ì¶©ë¶„íˆ í´ ë•Œë§Œ íšŒì „
         if (moveDirection.sqrMagnitude > 0.001f)
         {
             transform.rotation = Quaternion.LookRotation(moveDirection);
