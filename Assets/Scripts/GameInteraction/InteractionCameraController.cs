@@ -1,29 +1,26 @@
-﻿using System.Collections;
+﻿/* InteractionCameraController.cs
+기존 GameCameraController의 공통 버전 (원하는 transform으로 이동할 수 있게 수정) */
+
+using System.Collections;
 using UnityEngine;
 
-public class GameCameraController : MonoBehaviour
+public class InteractionCameraController : MonoBehaviour
 {
-    [SerializeField] private Transform exploreCameraPoint;
-    [SerializeField] private Transform talkCameraPoint;
+    [SerializeField] private Transform defaultCameraPoint;
     [SerializeField] private float transitionDuration = 0.5f;
 
     private Coroutine transitionRoutine;
 
-    public void MoveToExploreView()
+    public void MoveToDefaultView()
     {
-        MoveTo(exploreCameraPoint);
+        MoveTo(defaultCameraPoint);
     }
 
-    public void MoveToTalkView()
-    {
-        MoveTo(talkCameraPoint);
-    }
-
-    private void MoveTo(Transform target)
+    public void MoveTo(Transform target)
     {
         if (target == null)
         {
-            Debug.LogWarning("[GameCameraController] Camera target is null.");
+            Debug.LogWarning("[InteractionCameraController] Camera target is null.");
             return;
         }
 
@@ -47,8 +44,6 @@ public class GameCameraController : MonoBehaviour
         {
             elapsed += Time.deltaTime;
             float t = Mathf.Clamp01(elapsed / transitionDuration);
-
-            // 부드러운 ease in/out
             t = t * t * (3f - 2f * t);
 
             transform.position = Vector3.Lerp(startPos, endPos, t);

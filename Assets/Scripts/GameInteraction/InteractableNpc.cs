@@ -1,4 +1,4 @@
-using System.Collections;
+ï»¿using System.Collections;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -63,13 +63,13 @@ public class InteractableNpc : MonoBehaviour
 
         if (interactOnlyOnce && hasInteracted)
         {
-            Debug.Log($"[InteractableNpc] ÀÌ¹Ì »óÈ£ÀÛ¿ëÇÑ NPCÀÔ´Ï´Ù: {npcId}");
+            Debug.Log($"[InteractableNpc] ì´ë¯¸ ìƒí˜¸ì‘ìš©í•œ NPCì…ë‹ˆë‹¤: {npcId}");
             return;
         }
 
         if (player == null)
         {
-            Debug.LogError("[InteractableNpc] PlayerClickMover°¡ ¿¬°áµÇÁö ¾Ê¾Ò½À´Ï´Ù.");
+            Debug.LogError("[InteractableNpc] PlayerClickMoverê°€ ì—°ê²°ë˜ì§€ ì•Šì•˜ìŠµë‹ˆë‹¤.");
             return;
         }
 
@@ -77,7 +77,7 @@ public class InteractableNpc : MonoBehaviour
 
         Transform target = interactionPoint != null ? interactionPoint : transform;
 
-        Debug.Log($"[InteractableNpc] NPC Å¬¸¯: {npcId}");
+        Debug.Log($"[InteractableNpc] NPC í´ë¦­: {npcId}");
 
         if (stageReactionController != null)
             stageReactionController.OnInteractionStarted();
@@ -88,7 +88,7 @@ public class InteractableNpc : MonoBehaviour
         {
             hasInteracted = true;
 
-            Debug.Log($"[InteractableNpc] NPC µµÂø ¿Ï·á: {npcId}");
+            Debug.Log($"[InteractableNpc] NPC ë„ì°© ì™„ë£Œ: {npcId}");
 
             if (npcCollider != null)
                 npcCollider.enabled = false;
