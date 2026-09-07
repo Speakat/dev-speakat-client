@@ -20,7 +20,7 @@ NPC 또는 3D 오브젝트 클릭
 → InteractionTarget의 On Interaction Started 이벤트 실행
 → PlayerClickMover가 Interaction Point로 이동
 → 플레이어 도착
-→ InteractionCameraController가 Camera Point로 카메라 전환
+→ InteractionCameraController가 Camera Point로 카메라 이동 시작
 → InteractionTarget의 On Player Arrived 이벤트 실행
 → player fade / 세션 시작 등 연결된 이벤트 실행
 ```
@@ -69,7 +69,8 @@ NPC나 상호작용 가능한 3D 오브젝트에 붙이는 컴포넌트입니다
 
 마우스 또는 터치 입력을 감지하고, Raycast를 통해 클릭된 오브젝트에서 `InteractionTarget`을 찾습니다.
 target이 확인되면 상호작용 시작 이벤트를 실행하고, 플레이어를 `Interaction Point`로 이동시킵니다.
-플레이어가 도착하면 카메라를 `Camera Point`로 전환한 뒤 도착 이벤트를 실행합니다.
+플레이어가 도착하면 `Camera Point`로 카메라 이동을 시작하고, 이어서 도착 이벤트를 실행합니다.
+`Camera Point`가 비어 있으면 카메라 이동은 생략하고 도착 이벤트만 실행됩니다.
 
 #### 주요 역할
 
@@ -77,7 +78,7 @@ target이 확인되면 상호작용 시작 이벤트를 실행하고, 플레이�
 - Raycast로 클릭된 `InteractionTarget` 탐색
 - 상호작용 시작 이벤트 실행
 - 플레이어 이동 요청
-- 플레이어 도착 후 카메라 전환
+- 플레이어 도착 후 카메라 이동 시작
 - 플레이어 도착 이벤트 실행
 - 상호작용 중 중복 입력 방지
 

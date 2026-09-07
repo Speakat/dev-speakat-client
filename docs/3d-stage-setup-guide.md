@@ -106,7 +106,8 @@ GamePlayManager.StartQuestSessionFromNpc()
 
 현재 카페 씬에서는 도착 후 player fade를 실행하고, 게임 세션을 시작합니다.
 
-카메라 전환은 `StageInteractionController`가 `InteractionCameraController.MoveTo(target.CameraPoint)`를 호출하여 처리합니다.
+카메라 이동은 `StageInteractionController`가 `InteractionCameraController.MoveTo(target.CameraPoint)`를 호출하여 시작합니다.
+`MoveTo()`는 Coroutine을 시작한 뒤 바로 반환되므로, 카메라 이동이 완료되기 전에 `On Player Arrived` 이벤트가 실행됩니다.
 
 ---
 
@@ -119,7 +120,8 @@ GamePlayManager.StartQuestSessionFromNpc()
 3. Main Camera에 `InteractionCameraController`를 추가합니다.
 4. 상호작용할 NPC 또는 오브젝트에 `InteractionTarget`을 추가합니다.
 5. NPC 앞에 빈 오브젝트를 만들고 `Interaction Point`로 연결합니다.
-6. 대화 시점 카메라 위치에 빈 오브젝트를 만들고 `Camera Point`로 연결합니다.
+6. 카메라 전환이 필요한 경우, 대화 시점 카메라 위치에 빈 오브젝트를 만들고 `Camera Point`로 연결합니다.
+`Camera Point`를 비워두면 카메라 이동 없이 `On Player Arrived` 이벤트가 실행됩니다.
 7. `On Interaction Started`에 클릭 직후 실행할 이벤트를 연결합니다.
 8. `On Player Arrived`에 도착 후 실행할 이벤트를 연결합니다.
 9. Play Mode에서 클릭 → 이동 → 도착 이벤트 흐름을 확인합니다.
@@ -144,6 +146,8 @@ GamePlayManager.StartQuestSessionFromNpc()
 ### Camera Point
 
 `Camera Point`는 상호작용 시 카메라가 이동할 위치와 회전값입니다.
+
+카메라 전환이 필요 없는 interaction이라면 `Camera Point`는 비워둘 수 있습니다.
 
 아래 기준을 참고하여 배치합니다.
 
@@ -172,7 +176,7 @@ Start Session On Scene Start = false
 - NPC 클릭이 감지되는지 확인합니다.
 - 플레이어가 `Interaction Point`로 이동하는지 확인합니다.
 - 도착 후 이벤트가 실행되는지 확인합니다.
-- 카메라가 `Camera Point`로 전환되는지 확인합니다.
+- `Camera Point`가 연결된 경우, 카메라 이동이 시작되는지 확인합니다.
 - player fade가 정상 동작하는지 확인합니다.
 - 세션 API 호출이 스킵되는지 확인합니다.
 
@@ -193,7 +197,7 @@ Start Session On Scene Start = false
 ```text
 - Barista NPC 클릭 감지 성공
 - 플레이어 이동 성공
-- 카메라 전환 성공
+- Camera Point 기준 카메라 이동 확인
 - Barista NPC idle/reaction 동작 확인
 - player fade 동작 확인
 - 테스트 옵션에 따라 세션 API 호출 스킵 확인
