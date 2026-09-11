@@ -7,6 +7,10 @@ using Speakat.Client;
 
 public class SpeakatApiProvider : MonoBehaviour
 {
+#if UNITY_EDITOR
+    private const string EditorAccessTokenEnvironmentVariable = "SPEAKAT_DEBUG_ACCESS_TOKEN";
+#endif
+
     [SerializeField] private string baseUrl = "https://api.speakat.chokoring.com/";
     [SerializeField] private string debugAccessToken;
 
@@ -98,6 +102,13 @@ public class SpeakatApiProvider : MonoBehaviour
             accessToken = TokenStore.Instance.AccessToken.Trim();
             Debug.Log("[SpeakatApiProvider] TokenStore.AccessToken을 사용합니다.");
         }
+#if UNITY_EDITOR
+        else if (!string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable(EditorAccessTokenEnvironmentVariable)))
+        {
+            accessToken = Environment.GetEnvironmentVariable(EditorAccessTokenEnvironmentVariable).Trim();
+            Debug.LogWarning("[SpeakatApiProvider] Unity Editor 환경변수의 AccessToken을 사용합니다.");
+        }
+#endif
         else if (!string.IsNullOrEmpty(debugAccessToken))
         {
             accessToken = debugAccessToken.Trim();

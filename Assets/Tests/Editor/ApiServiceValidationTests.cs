@@ -80,3 +80,39 @@ public class ApiServiceValidationTests
         Assert.ThrowsAsync<InvalidOperationException>(async () => await service.SaveAsync(1, nameof(service), null));
     }
 }
+
+public class SpeakatApiProviderTests
+{
+    private const string EnvironmentVariableName = "SPEAKAT_DEBUG_ACCESS_TOKEN";
+    private string originalAccessToken;
+
+    [SetUp]
+    public void SetUp()
+    {
+        originalAccessToken = Environment.GetEnvironmentVariable(EnvironmentVariableName);
+    }
+
+    [TearDown]
+    public void TearDown()
+    {
+        Environment.SetEnvironmentVariable(EnvironmentVariableName, originalAccessToken);
+    }
+
+    [Test]
+    public void AccessTokenForRequest_UsesTrimmedEditorEnvironmentToken()
+    {
+        Environment.SetEnvironmentVariable(EnvironmentVariableName, " editor-token ");
+        var testObject = new GameObject(nameof(SpeakatApiProviderTests));
+
+        try
+        {
+            SpeakatApiProvider provider = testObject.AddComponent<SpeakatApiProvider>();
+
+            Assert.That(provider.AccessTokenForRequest, Is.EqualTo("editor-token"));
+        }
+        finally
+        {
+            UnityEngine.Object.DestroyImmediate(testObject);
+        }
+    }
+}
