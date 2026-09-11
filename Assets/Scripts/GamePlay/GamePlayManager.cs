@@ -30,6 +30,10 @@ public class GamePlayManager : MonoBehaviour
 
     [SerializeField] private StageReactionController stageReactionController;
 
+    // Interaction용 테스트 코드
+    [Header("Test Options")]
+    [SerializeField] private bool skipSessionApiForInteractionTest = false;
+
     QuestResult questResult;
 
     private void Awake()
@@ -58,6 +62,16 @@ public class GamePlayManager : MonoBehaviour
     // NPC 도착 후 호출
     public async void StartQuestSessionFromNpc()
     {
+        if (skipSessionApiForInteractionTest)
+        {
+            Debug.Log("[GamePlayManager] Interaction test mode: session API start skipped.");
+
+            if (recordButton != null)
+                recordButton.SetRecordInactive();
+
+            return;
+        }
+
         await GameSessionStartAsync();
     }
 
