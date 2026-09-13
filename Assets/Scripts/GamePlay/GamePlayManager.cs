@@ -22,6 +22,7 @@ public class GamePlayManager : MonoBehaviour
     private string sessionId;
     public int turnCount = 0;
 
+    private const string ApiBaseUrl = "https://api.speakat.chokoring.com"; // 새 도메인용 추가
     private const string SessionEndpoint = "/sessions";
     private const string SpeechEndpoint = "/sessions/{0}/speech";
     private const string SessionEndEndpoint = "/sessions/{0}/end";
@@ -34,6 +35,10 @@ public class GamePlayManager : MonoBehaviour
 
     [SerializeField] private StageReactionController stageReactionController;
 
+    // Interaction용 테스트 코드
+    [Header("Test Options")]
+    [SerializeField] private bool skipSessionApiForInteractionTest = false;
+    
     QuestResult questResult;
 
     private void Awake()
@@ -62,6 +67,16 @@ public class GamePlayManager : MonoBehaviour
     // NPC 도착 후 호출
     public async void StartQuestSessionFromNpc()
     {
+        if (skipSessionApiForInteractionTest)
+        {
+            Debug.Log("[GamePlayManager] Interaction test mode: session API start skipped.");
+
+            if (recordButton != null)
+                recordButton.SetRecordInactive();
+
+            return;
+        }
+
         await GameSessionStartAsync();
     }
 
@@ -323,7 +338,7 @@ public class GamePlayManager : MonoBehaviour
 
     private async Task<string> PostSessionAsync(int questId)
     {
-        string url = "https://speakat.hyorim.shop" + SessionEndpoint;
+        string url = ApiBaseUrl + SessionEndpoint;
         string body = JsonUtility.ToJson(new SessionRequest { quest_id = questId });
 
         Debug.Log($"[GamePlayManager] PostSession url={url}, body={body}");
@@ -338,7 +353,7 @@ public class GamePlayManager : MonoBehaviour
             throw new System.Exception("[GamePlayManager] sessionId가 비어 있어 speech 요청을 보낼 수 없습니다.");
         }
 
-        string url = "https://speakat.hyorim.shop" + string.Format(SpeechEndpoint, sessionId);
+        string url = ApiBaseUrl + string.Format(SpeechEndpoint, sessionId);
         string body = JsonUtility.ToJson(new SpeechRequest
         {
             quest_id = questId,
@@ -356,7 +371,7 @@ public class GamePlayManager : MonoBehaviour
     {
         try
         {
-            string url = "https://speakat.hyorim.shop" + string.Format(SessionEndEndpoint, sessionId);
+            string url = ApiBaseUrl + string.Format(SessionEndEndpoint, sessionId);
             string json = await PostAsync(url, "{}");
         }
         catch (System.Exception e)
@@ -374,7 +389,29 @@ public class GamePlayManager : MonoBehaviour
 
     private IEnumerator PostCoroutine(string url, string bodyJson, TaskCompletionSource<string> tcs)
     {
-        string token = TokenStore.Instance.AccessToken.Trim();
+        // TokenStore 없는 경우
+        if (TokenStore.Instance == null)
+        {
+            tcs.SetException(new System.Exception(
+                "[GamePlayManager] TokenStore.Instance가 없습니다. 로그인 후 GamePlayScene에 진입했는지 확인하세요."
+            )); 
+            yield break;
+        }
+
+        string token = TokenStore.Instance.AccessToken;
+
+        // TokenStore 있는데 AccessToken이 비어 있는 경우
+        if (string.IsNullOrWhiteSpace(token))
+        {
+            tcs.SetException(new System.Exception(
+                "[GamePlayManager] AccessToken이 비어 있습니다. 로그인 토큰 저장 여부를 확인하세요."
+            ));
+            yield break;
+        }
+
+        // Token 있는 경우
+        token = token.Trim();
+
         byte[] bodyBytes = Encoding.UTF8.GetBytes(bodyJson);
 
         using UnityWebRequest req = new UnityWebRequest(url, UnityWebRequest.kHttpVerbPOST);
@@ -389,10 +426,16 @@ public class GamePlayManager : MonoBehaviour
         if (req.result == UnityWebRequest.Result.Success)
         {
             tcs.SetResult(req.downloadHandler.text);
-            recordButton.SetRecordActive();
+
+            if (recordButton != null)
+                recordButton.SetRecordActive();
         }
         else
-            tcs.SetException(new System.Exception($"[{req.responseCode}] {req.error} — {req.downloadHandler.text}"));
+        {
+            tcs.SetException(new System.Exception(
+                $"[{req.responseCode}] {req.error} — {req.downloadHandler.text}"
+            ));
+        }
     }
 
     // 더미 폴백용 — 실제 호출 금지

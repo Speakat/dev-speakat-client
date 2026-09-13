@@ -1,4 +1,4 @@
-using System.Collections;
+ï»¿using System.Collections;
 using UnityEngine;
 
 public class StageReactionController : MonoBehaviour
@@ -40,7 +40,7 @@ public class StageReactionController : MonoBehaviour
             playerFadeController.FadeOut();
     }
 
-    // Áß°£ ´ëÈ­ ¼º°ø
+    // ì¤‘ê°„ ëŒ€í™” ì„±ê³µ
     public void PlayTurnPassedReaction()
     {
         Debug.Log("[StageReaction] Turn Passed");
@@ -55,7 +55,7 @@ public class StageReactionController : MonoBehaviour
         }
     }
 
-    // ´ëÈ­ ½ÇÆÐ
+    // ëŒ€í™” ì‹¤íŒ¨
     public void PlayTurnFailedReaction()
     {
         Debug.Log("[StageReaction] Turn Failed");
@@ -70,7 +70,7 @@ public class StageReactionController : MonoBehaviour
         }
     }
 
-    // ÃÖÁ¾ ¼º°ø
+    // ìµœì¢… ì„±ê³µ
     public void PlayQuestSuccessReaction()
     {
         Debug.Log("[StageReaction] Quest Success");
@@ -81,7 +81,7 @@ public class StageReactionController : MonoBehaviour
         StartCoroutine(CoGiveCoffee());
     }
 
-    // ÃÖÁ¾ ½ÇÆÐ
+    // ìµœì¢… ì‹¤íŒ¨
     public void PlayQuestFailReaction()
     {
         Debug.Log("[StageReaction] Quest Fail");
@@ -176,7 +176,7 @@ public class StageReactionController : MonoBehaviour
         rewardCoffee.transform.rotation = endRot;
     }
 
-    // Å×½ºÆ®¿ë
+    // í…ŒìŠ¤íŠ¸ìš©
     /*
     private void Update()
     {
