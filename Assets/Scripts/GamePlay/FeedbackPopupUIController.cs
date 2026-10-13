@@ -1,9 +1,7 @@
-using System.Collections;
 using System.Collections.Generic;
-using System.Text;
+using System.Threading.Tasks;
 using TMPro;
 using UnityEngine;
-using UnityEngine.Networking;
 using UnityEngine.UI;
 
 public class FeedbackPopupUIController : MonoBehaviour
@@ -17,14 +15,14 @@ public class FeedbackPopupUIController : MonoBehaviour
     [SerializeField]
     private TextMeshProUGUI wordText;
 
+    [SerializeField] private FlashcardApiService flashcardApiService;
+
     public Image saveIcon;
 
     public Sprite defaultSaveIcon;
 
     public Sprite successSaveIcon;
 
-    private const string BaseUrl = "https://speakat.hyorim.shop";
-    private const string FlashcardsEndpoint = "/flashcards";
     private string currentFeedback = "";
     private List<string> currentSuggestions = new List<string>();
 
@@ -63,67 +61,51 @@ public class FeedbackPopupUIController : MonoBehaviour
         gameObject.SetActive(false);
     }
 
-    private void SaveWord()
+    private async void SaveWord()
     {
-        Debug.Log($"[FeedbackPopup] 저장 버튼 클릭: feedback='{currentFeedback}', suggestions=[{string.Join(", ", currentSuggestions)}]");
         if (currentSuggestions == null || currentSuggestions.Count == 0)
         {
             Debug.LogWarning("[FeedbackPopup] 저장할 단어가 없습니다.");
             return;
         }
 
-        StartCoroutine(PostAllFlashcardsCoroutine());
+        await SaveAllFlashcardsAsync();
     }
 
-    private IEnumerator PostAllFlashcardsCoroutine()
+    private async Task SaveAllFlashcardsAsync()
     {
+        if (flashcardApiService == null)
+        {
+            Debug.LogError("[FeedbackPopup] flashcardApiService is not assigned.");
+            return;
+        }
+
         saveButton.interactable = false;
 
         int questId = SceneContext.SelectedQuestId != 0 ? SceneContext.SelectedQuestId : 1;
+        List<string> failedWords = new List<string>();
 
         foreach (string word in currentSuggestions)
         {
-            string body = JsonUtility.ToJson(new FlashcardRequest
+            try
             {
-                questId = questId,
-                word = word,
-                recommendationReason = currentFeedback
-            });
-
-            bool success = false;
-            string resultMessage = "";
-
-            yield return StartCoroutine(PostCoroutine(BaseUrl + FlashcardsEndpoint, body,
-                onSuccess: (response) => { success = true; resultMessage = response; },
-                onFailure: (error) => { success = false; resultMessage = error; }
-            ));
-
-            if (success)
-                Debug.Log($"[FeedbackPopup] 저장 성공: word={word}, response={resultMessage}");
-            else
-                Debug.Log($"[FeedbackPopup] 저장 실패: word={word}, error={resultMessage}");
+                await flashcardApiService.SaveAsync(questId, word, currentFeedback);
+            }
+            catch (System.Exception exception)
+            {
+                failedWords.Add(word);
+                Debug.LogError($"[FeedbackPopup] 단어 저장 실패: {ApiErrorMessage.From(exception)}");
+            }
         }
 
-        saveButton.interactable = true;
-        saveIcon.sprite = successSaveIcon; // 실패해도 항상 실행
-    }
-    private IEnumerator PostCoroutine(string url, string bodyJson, System.Action<string> onSuccess, System.Action<string> onFailure)
-    {
-        byte[] bodyBytes = Encoding.UTF8.GetBytes(bodyJson);
-        string token = TokenStore.Instance.AccessToken.Trim();
+        currentSuggestions = failedWords;
+        bool allSucceeded = failedWords.Count == 0;
+        saveButton.interactable = !allSucceeded;
+        saveIcon.sprite = allSucceeded ? successSaveIcon : defaultSaveIcon;
 
-        using UnityWebRequest req = new UnityWebRequest(url, UnityWebRequest.kHttpVerbPOST);
-        req.uploadHandler = new UploadHandlerRaw(bodyBytes);
-        req.uploadHandler.contentType = "application/json";
-        req.downloadHandler = new DownloadHandlerBuffer();
-        req.SetRequestHeader("Authorization", $"Bearer {token}");
-        req.SetRequestHeader("Content-Type", "application/json");
-
-        yield return req.SendWebRequest();
-
-        if (req.result == UnityWebRequest.Result.Success)
-            onSuccess?.Invoke(req.downloadHandler.text);
-        else
-            onFailure?.Invoke($"[{req.responseCode}] {req.error} — {req.downloadHandler.text}");
+        if (!allSucceeded)
+        {
+            SetWord(string.Join(", ", failedWords));
+        }
     }
 }

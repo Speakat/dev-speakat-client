@@ -1,13 +1,17 @@
 using System;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Threading.Tasks;
 using UnityEngine;
 using Speakat.Client;
 
 public class SpeakatApiProvider : MonoBehaviour
 {
-    [SerializeField] private string baseUrl = "https://speakat.hyorim.shop/";
-    [SerializeField] private string debugAccessToken;
+#if UNITY_EDITOR
+    private const string EditorAccessTokenEnvironmentVariable = "SPEAKAT_DEBUG_ACCESS_TOKEN";
+#endif
+
+    [SerializeField] private string baseUrl = "https://api.speakat.chokoring.com/";
 
     private HttpClient httpClient;
     private SpeakatClient client;
@@ -67,7 +71,7 @@ public class SpeakatApiProvider : MonoBehaviour
 
         if (string.IsNullOrWhiteSpace(url))
         {
-            url = "https://speakat.hyorim.shop/";
+            url = "https://api.speakat.chokoring.com/";
         }
 
         url = url.Trim()
@@ -97,19 +101,31 @@ public class SpeakatApiProvider : MonoBehaviour
             accessToken = TokenStore.Instance.AccessToken.Trim();
             Debug.Log("[SpeakatApiProvider] TokenStore.AccessToken을 사용합니다.");
         }
-        else if (!string.IsNullOrEmpty(debugAccessToken))
+#if UNITY_EDITOR
+        else if (!string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable(EditorAccessTokenEnvironmentVariable)))
         {
-            accessToken = debugAccessToken.Trim();
-            Debug.LogWarning("[SpeakatApiProvider] TokenStore가 비어 있어 debugAccessToken을 사용합니다.");
+            accessToken = Environment.GetEnvironmentVariable(EditorAccessTokenEnvironmentVariable).Trim();
+            Debug.LogWarning("[SpeakatApiProvider] Unity Editor 환경변수의 AccessToken을 사용합니다.");
         }
-
-        if (!string.IsNullOrEmpty(accessToken))
-        {
-            Debug.Log($"[SpeakatApiProvider] token length={accessToken.Length}");
-            Debug.Log($"[SpeakatApiProvider] token startsWith eyJ={accessToken.StartsWith("eyJ")}");
-        }
+#endif
 
         return accessToken;
+    }
+
+    public async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request)
+    {
+        if (request == null)
+        {
+            throw new ArgumentNullException(nameof(request));
+        }
+
+        if (httpClient == null)
+        {
+            CreateClient();
+        }
+
+        RefreshAuthHeader();
+        return await httpClient.SendAsync(request);
     }
 
     public void RefreshAuthHeader()

@@ -728,6 +728,8 @@ GameObject:
   - component: {fileID: 5089135385141890151}
   - component: {fileID: 805952370749224033}
   - component: {fileID: 8930104950954316749}
+  - component: {fileID: 7913284931230368768}
+  - component: {fileID: 2448155489731112960}
   m_Layer: 5
   m_Name: FeedbackPopupUI
   m_TagString: Untagged
@@ -813,6 +815,34 @@ MonoBehaviour:
   saveIcon: {fileID: 8229977966627843247}
   defaultSaveIcon: {fileID: 21300000, guid: dd6955d30f3948544b23c41c9a54ee21, type: 3}
   successSaveIcon: {fileID: 21300000, guid: 25a4acfcb39721b47921f02daa8af0bc, type: 3}
+  flashcardApiService: {fileID: 2448155489731112960}
+--- !u!114 &7913284931230368768
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5353890962692096650}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ae8d48dfafb017d42b59e30bba4be283, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::SpeakatApiProvider
+  baseUrl: https://api.speakat.chokoring.com/
+  debugAccessToken:
+--- !u!114 &2448155489731112960
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5353890962692096650}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 57345dc2509b4b1e969b2c6d74a4946c, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::FlashcardApiService
+  apiProvider: {fileID: 7913284931230368768}
 --- !u!1 &5420754003275930073
 GameObject:
   m_ObjectHideFlags: 0

@@ -512,6 +512,8 @@ GameObject:
   - component: {fileID: 3750510576620419786}
   - component: {fileID: 3963098406039996952}
   - component: {fileID: 5610756928789043385}
+  - component: {fileID: 3145694482481971200}
+  - component: {fileID: 1137449877460825984}
   m_Layer: 5
   m_Name: QuestPopup
   m_TagString: Untagged
@@ -598,6 +600,34 @@ MonoBehaviour:
   objectivesContainer: {fileID: 2735344360849401312}
   questPopupPanel: {fileID: 7700662092489179300}
   loadingPanel: {fileID: 3128414841676911445}
+  questApiService: {fileID: 1137449877460825984}
+--- !u!114 &3145694482481971200
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3256899365636637318}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ae8d48dfafb017d42b59e30bba4be283, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::SpeakatApiProvider
+  baseUrl: https://api.speakat.chokoring.com/
+  debugAccessToken:
+--- !u!114 &1137449877460825984
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3256899365636637318}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0f175590eec74ff0ba5f654db1894d15, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::QuestApiService
+  apiProvider: {fileID: 3145694482481971200}
 --- !u!1 &5164326727738785110
 GameObject:
   m_ObjectHideFlags: 0

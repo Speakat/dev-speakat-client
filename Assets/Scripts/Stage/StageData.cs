@@ -20,7 +20,7 @@ public class StageItem
     public string title;
     public string description;
     public string thumbnailUrl;
-    public string status;
+    public StageStatus status;
     public int questCount;
     public int completedQuestCount;
 }
@@ -53,4 +53,11 @@ public class QuestItem
     public int sortOrder;
     public bool isCompleted;
     public int attemptCount;
+}
+
+public enum StageStatus
+{
+    Locked = 0,
+    Unlocked = 1,
+    Completed = 2
 }

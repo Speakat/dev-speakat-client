@@ -1,7 +1,6 @@
 using System.Threading.Tasks;
 using TMPro;
 using UnityEngine;
-using UnityEngine.Networking;
 
 public class QuestPanelUIController : MonoBehaviour
 {
@@ -11,6 +10,8 @@ public class QuestPanelUIController : MonoBehaviour
     [SerializeField]
     private QuestButtonController[] questButtons;
 
+    [SerializeField] private QuestApiService questApiService;
+
     private StageDetailResponse stageDetailResponse;
 
     public GameObject questPanel;
@@ -18,9 +19,6 @@ public class QuestPanelUIController : MonoBehaviour
 
     public int StageId { get; set; }
 
-
-    private const string BaseUrl = "https://speakat.hyorim.shop";
-    private const string StageDetailEndpoint = "/stages/";
 
     private string stageDetailDummyData = @"
 {
@@ -82,33 +80,37 @@ public class QuestPanelUIController : MonoBehaviour
     {
         try
         {
-            string url = BaseUrl + StageDetailEndpoint + StageId;
+            if (questApiService == null)
+            {
+                throw new System.InvalidOperationException(
+                    "[QuestPanelUIController] questApiService is not assigned.");
+            }
             //Debug.Log($"[QuestPanelUIController] 요청 URL: {url}");
-            string json = await GetAsync(url);
             //Debug.Log($"[QuestPanelUIController] 응답 raw: {json}");
-            stageDetailResponse = JsonUtility.FromJson<StageDetailResponse>(json);
-            ApplyStageDetail(stageDetailResponse);
+            StageDetailData data = await questApiService.GetStageDetailAsync(StageId);
+            ApplyStageDetail(data);
         }
         catch (System.Exception e)
         {
-            Debug.LogError($"[QuestPanelUIController] 스테이지 상세 로드 실패 (stageId={StageId}): {e.Message}");
+            Debug.LogError(
+                $"[QuestPanelUIController] 스테이지 상세 로드 실패 (stageId={StageId}): {ApiErrorMessage.From(e)}");
         }
     }
 
-    private void ApplyStageDetail(StageDetailResponse response)
+    private void ApplyStageDetail(StageDetailData data)
     {   
         loadingPanel.SetActive(false);
         questPanel.SetActive(true);
-        SetStageName(response.data.title);
+        SetStageName(data.title);
 
         int completedQuestCount = SceneContext.GetCompletedQuestCount(StageId);
 
         for (int i = 0; i < questButtons.Length; i++)
         {
-            if (i < response.data.quests.Count)
+            if (i < data.quests.Count)
             {
-                Debug.Log(response.data.quests[i].title + " - " + response.data.quests[i].isCompleted);
-                QuestItem quest = response.data.quests[i];
+                Debug.Log(data.quests[i].title + " - " + data.quests[i].isCompleted);
+                QuestItem quest = data.quests[i];
                 questButtons[i].gameObject.SetActive(true);
                 questButtons[i].SetQuestButton(quest.questId, quest.isCompleted);
             }
@@ -119,19 +121,4 @@ public class QuestPanelUIController : MonoBehaviour
         }
     }
 
-    private async Task<string> GetAsync(string url)
-    {
-        string token = TokenStore.Instance.AccessToken.Trim();
-
-        using UnityWebRequest req = UnityWebRequest.Get(url);
-        req.SetRequestHeader("Authorization", $"Bearer {token}");
-        req.SetRequestHeader("Content-Type", "application/json");
-
-        await req.SendWebRequest();
-
-        if (req.result == UnityWebRequest.Result.Success)
-            return req.downloadHandler.text;
-
-        throw new System.Exception($"[{req.responseCode}] {req.error} — {req.downloadHandler.text}");
-    }
 }

@@ -11,7 +11,7 @@ public class StageButtonPanel : MonoBehaviour
     [SerializeField]
     private Button buttonComponent;
     public int StageId { get; set; }
-    public string StageStatus { get; set; }
+    public StageStatus StageStatus { get; set; }
 
     [SerializeField]
     private TextMeshProUGUI titleText;
@@ -28,7 +28,7 @@ public class StageButtonPanel : MonoBehaviour
         buttonImage = buttonComponent.GetComponent<Image>();
     }
 
-    public void SetStageButton(float dx, int id, string status, string title)
+    public void SetStageButton(float dx, int id, StageStatus status, string title)
     {
         float linedx = 93f;
         StageId = id;
@@ -44,15 +44,15 @@ public class StageButtonPanel : MonoBehaviour
         titleText.text = title;
 
         // status에 따른 버튼 이미지 세팅
-        if (status == "Completed")
+        if (status == StageStatus.Completed)
         {
             buttonImage.sprite = completeImage;
         }
-        else if (status == "Unlocked")
+        else if (status == StageStatus.Unlocked)
         {
             buttonImage.sprite = progressImage;
         }
-        else if (status == "Locked")
+        else if (status == StageStatus.Locked)
         {
             buttonImage.sprite = lockedImage;
             buttonComponent.interactable = false; // 잠긴 스테이지는 클릭 불가능

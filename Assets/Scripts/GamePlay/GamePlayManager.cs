@@ -1,8 +1,5 @@
 using UnityEngine;
-using Newtonsoft.Json;
 using System.Threading.Tasks;
-using UnityEngine.Networking;
-using System.Text;
 using System.Collections;
 
 public class GamePlayManager : MonoBehaviour
@@ -16,29 +13,27 @@ public class GamePlayManager : MonoBehaviour
     public FailurePopupUIController failurePopup;
     public LogPanelUIController logPanel;
 
+    [SerializeField] private GamePlayApiService gamePlayApiService;
+
     private string dialogue;
     private int stageId;
     private int questId = 1;
     private string sessionId;
     public int turnCount = 0;
 
-    private const string ApiBaseUrl = "https://api.speakat.chokoring.com"; // 새 도메인용 추가
-    private const string SessionEndpoint = "/sessions";
-    private const string SpeechEndpoint = "/sessions/{0}/speech";
-    private const string SessionEndEndpoint = "/sessions/{0}/end";
-
     SessionResponse sessionResponse;
 
     private bool isCompleted = false;
     public bool isAudioPlaying = false;
     private bool isSubmittingSpeech = false;
+    private bool isStartingSession = false;
 
     [SerializeField] private StageReactionController stageReactionController;
 
     // Interaction용 테스트 코드
     [Header("Test Options")]
     [SerializeField] private bool skipSessionApiForInteractionTest = false;
-    
+
     QuestResult questResult;
 
     private void Awake()
@@ -156,16 +151,22 @@ public class GamePlayManager : MonoBehaviour
 
             Debug.Log($"[GamePlayManager] 음성 제출 시작, base64Length={base64Wav?.Length}");
 
-            string json = await PostSpeechAsync(base64Wav);
+            if (gamePlayApiService == null)
+            {
+                throw new System.InvalidOperationException(
+                    "[GamePlayManager] gamePlayApiService is not assigned.");
+            }
 
-            Debug.Log($"[GamePlayManager] speech response={json}");
-
-            TurnResponse response = JsonUtility.FromJson<TurnResponse>(json);
-            HandleTurnResponse(response);
+            TurnData data = await gamePlayApiService.SubmitSpeechAsync(
+                sessionId,
+                questId,
+                turnCount + 1,
+                base64Wav);
+            HandleTurnData(data);
         }
         catch (System.Exception e)
         {
-            Debug.LogError($"[GamePlayManager] speech 제출 실패: {e.Message}");
+            Debug.LogError($"[GamePlayManager] speech 제출 실패: {ApiErrorMessage.From(e)}");
 
             if (!isCompleted && recordButton != null)
                 recordButton.SetRecordActive();
@@ -176,13 +177,8 @@ public class GamePlayManager : MonoBehaviour
         }
     }
 
-    private void HandleTurnResponse(TurnResponse response)
+    private void HandleTurnData(TurnData data)
     {
-        if (!response.isSuccess) return;
-
-        TurnData data = response.data;
-
-        Debug.Log($"[TurnEvaluation] userText='{data.userText}', npcDialogue='{data.npcDialogue}'");
         Debug.Log($"[TurnEvaluation] isTurnPassed: {data.isTurnPassed}, isQuestComplete: {data.turnEvaluation.isQuestComplete}");
 
         string progress = data.turnEvaluation.objectiveProgress != null
@@ -247,11 +243,18 @@ public class GamePlayManager : MonoBehaviour
             if (stageReactionController != null)
                 stageReactionController.PlayTurnPassedReaction();
 
-            if (!string.IsNullOrWhiteSpace(data.npcDialogueAudio) && npcAudioController != null)
-                npcAudioController.StartCoroutine(npcAudioController.PlayAudioFromBase64(data.npcDialogueAudio));
-
             if (!string.IsNullOrWhiteSpace(data.npcDialogue))
                 SetQuestion(data.npcDialogue);
+
+            if (!string.IsNullOrWhiteSpace(data.npcDialogueAudio) && npcAudioController != null)
+            {
+                // 오디오 재생이 끝나면 CoWaitForAudioClipPlay가 recordButton을 다시 활성화
+                npcAudioController.StartCoroutine(npcAudioController.PlayAudioFromBase64(data.npcDialogueAudio));
+            }
+            else if (recordButton != null)
+            {
+                recordButton.SetRecordActive();
+            }
         }
         else if (data.turnEvaluation.betterSuggestions == null || data.turnEvaluation.betterSuggestions.Count == 0)
         {
@@ -259,7 +262,9 @@ public class GamePlayManager : MonoBehaviour
                 stageReactionController.PlayTurnFailedReaction();
 
             failurePopup.ShowPopup();
-            recordButton.SetRecordActive();
+
+            if (recordButton != null)
+                recordButton.SetRecordActive();
         }
         else
         {
@@ -267,7 +272,9 @@ public class GamePlayManager : MonoBehaviour
                 stageReactionController.PlayTurnFailedReaction();
 
             feedbackPopup.SetFeedbackPopup(data.turnEvaluation.recommendationReason, data.turnEvaluation.betterSuggestions);
-            recordButton.SetRecordActive();
+
+            if (recordButton != null)
+                recordButton.SetRecordActive();
         }
     }
 
@@ -285,39 +292,47 @@ public class GamePlayManager : MonoBehaviour
 
     private async Task GameSessionStartAsync()
     {
-        stageId = SceneContext.SelectedStageId != 0 ? SceneContext.SelectedStageId : 1;
-        questId = SceneContext.SelectedQuestId != 0 ? SceneContext.SelectedQuestId : 1;
+        if (isStartingSession)
+        {
+            Debug.LogWarning("[GamePlayManager] 세션 시작 요청이 이미 진행 중입니다.");
+            return;
+        }
 
-        dialoguePanel.ClearPanels();
-        //recordButton.SetRecordInactive();
-
-        Debug.Log($"[GamePlayManager] 세션 시작: stageId={stageId}, questId={questId}");
+        isStartingSession = true;
 
         try
         {
-            string json = await PostSessionAsync(questId);
-            SessionResponse response = JsonUtility.FromJson<SessionResponse>(json);
+            stageId = SceneContext.SelectedStageId != 0 ? SceneContext.SelectedStageId : 1;
+            questId = SceneContext.SelectedQuestId != 0 ? SceneContext.SelectedQuestId : 1;
 
-            if (response.isSuccess)
+            dialoguePanel.ClearPanels();
+
+            Debug.Log($"[GamePlayManager] 세션 시작: stageId={stageId}, questId={questId}");
+
+            if (gamePlayApiService == null)
             {
-                sessionId = response.data.sessionId;
-                dialogue = response.data.npcDialogue;
-
-                Debug.Log($"[GamePlayManager] 세션 시작 성공: sessionId={sessionId}, questId={questId}");
-
-                SetQuestion(response.data.npcDialogue);
-
-                if (recordButton != null)
-                    recordButton.SetRecordActive();
+                throw new System.InvalidOperationException(
+                    "[GamePlayManager] gamePlayApiService is not assigned.");
             }
-            else
-            {
-                Debug.LogError("[GamePlayManager] 세션 시작 실패 응답");
-            }
+
+            SessionData data = await gamePlayApiService.StartSessionAsync(questId);
+            sessionId = data.sessionId;
+            dialogue = data.npcDialogue;
+
+            Debug.Log($"[GamePlayManager] 세션 시작 성공: sessionId={sessionId}, questId={questId}");
+
+            SetQuestion(data.npcDialogue);
+
+            if (recordButton != null)
+                recordButton.SetRecordActive();
         }
         catch (System.Exception e)
         {
-            Debug.LogError($"[GamePlayManager] 세션 시작 실패: {e.Message}");
+            Debug.LogError($"[GamePlayManager] 세션 시작 실패: {ApiErrorMessage.From(e)}");
+        }
+        finally
+        {
+            isStartingSession = false;
         }
     }
 
@@ -336,105 +351,21 @@ public class GamePlayManager : MonoBehaviour
                 result.isQuestSuccess);
     }
 
-    private async Task<string> PostSessionAsync(int questId)
-    {
-        string url = ApiBaseUrl + SessionEndpoint;
-        string body = JsonUtility.ToJson(new SessionRequest { quest_id = questId });
-
-        Debug.Log($"[GamePlayManager] PostSession url={url}, body={body}");
-
-        return await PostAsync(url, body);
-    }
-
-    private async Task<string> PostSpeechAsync(string base64Wav)
-    {
-        if (string.IsNullOrWhiteSpace(sessionId))
-        {
-            throw new System.Exception("[GamePlayManager] sessionId가 비어 있어 speech 요청을 보낼 수 없습니다.");
-        }
-
-        string url = ApiBaseUrl + string.Format(SpeechEndpoint, sessionId);
-        string body = JsonUtility.ToJson(new SpeechRequest
-        {
-            quest_id = questId,
-            turn = turnCount + 1,
-            audio = base64Wav
-        });
-
-        Debug.Log($"[GamePlayManager] PostSpeech url={url}");
-        Debug.Log($"[GamePlayManager] PostSpeech sessionId={sessionId}, questId={questId}, turn={turnCount + 1}");
-
-        return await PostAsync(url, body);
-    }
-
     public async Task EndSessionAsync()
     {
         try
         {
-            string url = ApiBaseUrl + string.Format(SessionEndEndpoint, sessionId);
-            string json = await PostAsync(url, "{}");
+            if (gamePlayApiService == null)
+            {
+                throw new System.InvalidOperationException(
+                    "[GamePlayManager] gamePlayApiService is not assigned.");
+            }
+
+            await gamePlayApiService.EndSessionAsync(sessionId);
         }
         catch (System.Exception e)
         {
-            Debug.LogError($"[GamePlayManager] 세션 종료 실패: {e.Message}");
-        }
-    }
-
-    private Task<string> PostAsync(string url, string bodyJson)
-    {
-        var tcs = new TaskCompletionSource<string>();
-        StartCoroutine(PostCoroutine(url, bodyJson, tcs));
-        return tcs.Task;
-    }
-
-    private IEnumerator PostCoroutine(string url, string bodyJson, TaskCompletionSource<string> tcs)
-    {
-        // TokenStore 없는 경우
-        if (TokenStore.Instance == null)
-        {
-            tcs.SetException(new System.Exception(
-                "[GamePlayManager] TokenStore.Instance가 없습니다. 로그인 후 GamePlayScene에 진입했는지 확인하세요."
-            )); 
-            yield break;
-        }
-
-        string token = TokenStore.Instance.AccessToken;
-
-        // TokenStore 있는데 AccessToken이 비어 있는 경우
-        if (string.IsNullOrWhiteSpace(token))
-        {
-            tcs.SetException(new System.Exception(
-                "[GamePlayManager] AccessToken이 비어 있습니다. 로그인 토큰 저장 여부를 확인하세요."
-            ));
-            yield break;
-        }
-
-        // Token 있는 경우
-        token = token.Trim();
-
-        byte[] bodyBytes = Encoding.UTF8.GetBytes(bodyJson);
-
-        using UnityWebRequest req = new UnityWebRequest(url, UnityWebRequest.kHttpVerbPOST);
-        req.uploadHandler = new UploadHandlerRaw(bodyBytes);
-        req.uploadHandler.contentType = "application/json";
-        req.downloadHandler = new DownloadHandlerBuffer();
-        req.SetRequestHeader("Authorization", $"Bearer {token}");
-        req.SetRequestHeader("Content-Type", "application/json");
-
-        yield return req.SendWebRequest();
-
-        if (req.result == UnityWebRequest.Result.Success)
-        {
-            tcs.SetResult(req.downloadHandler.text);
-
-            if (recordButton != null)
-                recordButton.SetRecordActive();
-        }
-        else
-        {
-            tcs.SetException(new System.Exception(
-                $"[{req.responseCode}] {req.error} — {req.downloadHandler.text}"
-            ));
+            Debug.LogError($"[GamePlayManager] 세션 종료 실패: {ApiErrorMessage.From(e)}");
         }
     }
 

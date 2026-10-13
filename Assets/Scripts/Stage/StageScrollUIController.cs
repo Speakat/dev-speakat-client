@@ -14,7 +14,7 @@ public class StageScrollUIController : MonoBehaviour
 
             // 현재 생성하는 버튼의 스테이지 ID 가져오기
             int currentStageId = stageList.items[i].stageId;
-            string currentStageStatus = stageList.items[i].status;
+            StageStatus currentStageStatus = stageList.items[i].status;
             string currentStageTitle = stageList.items[i].title;
 
             // 배치 예시 (지그재그 위치)

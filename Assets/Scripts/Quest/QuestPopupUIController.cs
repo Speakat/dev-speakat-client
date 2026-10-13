@@ -1,7 +1,6 @@
 using System.Threading.Tasks;
 using TMPro;
 using UnityEngine;
-using UnityEngine.Networking;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
@@ -19,6 +18,8 @@ public class QuestPopupUIController : MonoBehaviour
     [SerializeField]
     private Button startButton;
 
+    [SerializeField] private QuestApiService questApiService;
+
     public GameObject objectTextPrefab;
     public GameObject objectivesContainer;
 
@@ -26,11 +27,9 @@ public class QuestPopupUIController : MonoBehaviour
     public GameObject loadingPanel;
 
 
-    private const string BaseUrl = "https://speakat.hyorim.shop"; 
-    private const string QuestDetailEndpoint = "/quests/{0}";
-
     private int currentQuestId;
     private int currentStageId;
+    private int requestVersion;
 
     private string questDetailDummyData = @"
     {
@@ -63,7 +62,8 @@ public class QuestPopupUIController : MonoBehaviour
     public async void SetQuestPopup(int questId)
     {
         currentQuestId = questId;
-        await SetQuestPanel();
+        int currentRequestVersion = ++requestVersion;
+        await SetQuestPanel(currentRequestVersion);
     }
 
     public void SetPopupUI(QuestDetailData data)
@@ -73,6 +73,11 @@ public class QuestPopupUIController : MonoBehaviour
 
         titleText.text = data.title;
         descriptionText.text = data.description;
+
+        foreach (Transform child in objectivesContainer.transform)
+        {
+            Destroy(child.gameObject);
+        }
 
         for (int i = 0; i < data.objectives.Count; i++)
         {
@@ -95,36 +100,31 @@ public class QuestPopupUIController : MonoBehaviour
         SceneManager.LoadScene("GamePlayScene");
     }
 
-    public async Task SetQuestPanel()
+    private async Task SetQuestPanel(int currentRequestVersion)
     {
         try
         {
-            string url = "https://speakat.hyorim.shop" + string.Format(QuestDetailEndpoint, currentQuestId);
+            if (questApiService == null)
+            {
+                throw new System.InvalidOperationException(
+                    "[QuestPopupUIController] questApiService is not assigned.");
+            }
             //Debug.Log($"[QuestPanelUIController] 요청 URL: {url}");
-            string json = await GetAsync(url);
             //Debug.Log($"[QuestPanelUIController] 응답 raw: {json}");
-            questDetailResponse = JsonUtility.FromJson<QuestDetailResponse>(json);
-            SetPopupUI(questDetailResponse.data);
+            QuestDetailData data = await questApiService.GetQuestDetailAsync(currentQuestId);
+
+            if (currentRequestVersion != requestVersion)
+            {
+                return;
+            }
+
+            SetPopupUI(data);
         }
         catch (System.Exception e)
         {
-            Debug.LogError($"[QuestPanelUIController] 퀘스트 상세 로드 실패 (questId={currentQuestId}): {e.Message}");
+            Debug.LogError(
+                $"[QuestPopupUIController] 퀘스트 상세 로드 실패 (questId={currentQuestId}): {ApiErrorMessage.From(e)}");
         }
     }
 
-    private async Task<string> GetAsync(string url)
-    {
-        string token = TokenStore.Instance.AccessToken.Trim();
-
-        using UnityWebRequest req = UnityWebRequest.Get(url);
-        req.SetRequestHeader("Authorization", $"Bearer {token}");
-        req.SetRequestHeader("Content-Type", "application/json");
-
-        await req.SendWebRequest();
-
-        if (req.result == UnityWebRequest.Result.Success)
-            return req.downloadHandler.text;
-
-        throw new System.Exception($"[{req.responseCode}] {req.error} — {req.downloadHandler.text}");
-    }
 }
