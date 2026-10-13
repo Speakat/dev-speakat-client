@@ -304,7 +304,12 @@ public class AuthApi : MonoBehaviour
 
     private string BuildUrl(string path)
     {
-        string root = "https://api.speakat.chokoring.com";
+        if (apiProvider == null)
+        {
+            throw new InvalidOperationException("[AuthApi] apiProvider가 연결되지 않았습니다.");
+        }
+
+        string root = apiProvider.ApiBaseUrl;
         string p = path.StartsWith("/") ? path : "/" + path;
         return root.TrimEnd('/') + p;
     }

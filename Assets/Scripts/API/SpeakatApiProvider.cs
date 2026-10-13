@@ -12,7 +12,6 @@ public class SpeakatApiProvider : MonoBehaviour
 #endif
 
     [SerializeField] private string baseUrl = "https://api.speakat.chokoring.com/";
-    [SerializeField] private string debugAccessToken;
 
     private HttpClient httpClient;
     private SpeakatClient client;
@@ -109,11 +108,6 @@ public class SpeakatApiProvider : MonoBehaviour
             Debug.LogWarning("[SpeakatApiProvider] Unity Editor 환경변수의 AccessToken을 사용합니다.");
         }
 #endif
-        else if (!string.IsNullOrEmpty(debugAccessToken))
-        {
-            accessToken = debugAccessToken.Trim();
-            Debug.LogWarning("[SpeakatApiProvider] TokenStore가 비어 있어 debugAccessToken을 사용합니다.");
-        }
 
         return accessToken;
     }
